@@ -21,11 +21,15 @@ void Server::close() {
 
 
 void Server::handleEvent(struct mg_connection *nc, int type, void *evData) {
-  struct mbuf *buf = &nc->recv_mbuf;
+  struct mbuf *data = &nc->recv_mbuf;
 
   switch (type) {
   case MG_EV_RECV:
-    eventReceive(nc, buf);
+    eventReceive(nc, data);
+    break;
+
+  case MG_EV_HTTP_REQUEST:
+    eventHTTP(nc, data);
     break;
 
   default:
@@ -33,8 +37,16 @@ void Server::handleEvent(struct mg_connection *nc, int type, void *evData) {
   }
 }
 
-void Server::eventReceive(struct mg_connection *nc, struct mbuf *buf) {
-  // This event handler implements simple TCP echo server
-  mg_send(nc, buf->buf, buf->len);  // Echo received data back
-  mbuf_remove(buf, buf->len);       // Discard data from recv buffer
+void Server::eventReceive(struct mg_connection *nc, struct mbuf *data) {
+  printf("MG_EV_RECV:\n%.*s\n", (int)data->len, data->buf);
+
+  HTTP::request(data);
+
+  // // This event handler implements simple TCP echo server
+  // mg_send(nc, data->buf, data->len);  // Echo received data back
+  // mbuf_remove(data, data->len);       // Discard data from recv buffer
+}
+
+void Server::eventHTTP(struct mg_connection *nc, struct mbuf *data) {
+  printf("MG_EV_HTTP_REQUEST:\n%.*s\n", (int)data->len, data->buf);
 }

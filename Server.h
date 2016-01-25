@@ -1,4 +1,5 @@
 #include "mongoose.h"
+#include "HTTP.h"
 
 class Server {
 public:
@@ -7,10 +8,11 @@ public:
   static void close();
 
 private:
-  static void handleEvent(struct mg_connection *nc, int type, void *data);
+  static void handleEvent(struct mg_connection *nc, int type, void *evData);
 
   // All events are handled by eventNAME functions.
-  static void eventReceive(struct mg_connection *nc, struct mbuf *buf);
+  static void eventReceive(struct mg_connection *nc, struct mbuf *data);
+  static void eventHTTP(struct mg_connection *nc, struct mbuf *data);
 
   static struct mg_mgr mgr;
 };

@@ -4,8 +4,8 @@ MONGOOSE = mongoose.c
 
 all: cs426_graph_server cs426_graph_client
 
-cs426_graph_server: main.cpp Server.cpp
-	$(CC) $(CFLAGS) -o cs426_graph_server main.cpp Server.cpp $(MONGOOSE)
+cs426_graph_server: main.cpp Server.cpp HTTP.cpp
+	$(CC) $(CFLAGS) -o cs426_graph_server main.cpp Server.cpp HTTP.cpp $(MONGOOSE)
 
 cs426_graph_client: client.cpp
 	$(CC) $(CFLAGS) -o cs426_graph_client client.cpp $(MONGOOSE)
