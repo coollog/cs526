@@ -10,7 +10,7 @@ private:
   static void handleEvent(struct mg_connection *nc, int type, void *data);
 
   // All events are handled by eventNAME functions.
-  static void eventReceive(struct mg_connection *nc, void *data);
+  static void eventReceive(struct mg_connection *nc, struct mbuf *buf);
 
   static struct mg_mgr mgr;
 };

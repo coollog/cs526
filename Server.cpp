@@ -20,12 +20,12 @@ void Server::close() {
 }
 
 
-void Server::handleEvent(struct mg_connection *nc, int type, void *data) {
+void Server::handleEvent(struct mg_connection *nc, int type, void *evData) {
   struct mbuf *buf = &nc->recv_mbuf;
 
   switch (type) {
   case MG_EV_RECV:
-    eventReceive(nc, data);
+    eventReceive(nc, buf);
     break;
 
   default:
@@ -33,7 +33,7 @@ void Server::handleEvent(struct mg_connection *nc, int type, void *data) {
   }
 }
 
-void Server::eventReceive(struct mg_connection *nc, void *data) {
+void Server::eventReceive(struct mg_connection *nc, struct mbuf *buf) {
   // This event handler implements simple TCP echo server
   mg_send(nc, buf->buf, buf->len);  // Echo received data back
   mbuf_remove(buf, buf->len);       // Discard data from recv buffer
