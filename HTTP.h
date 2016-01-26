@@ -5,7 +5,7 @@
 
 class HTTP {
 public:
-  static void request(struct mg_connection *nc, struct mbuf *data);
+  static void request(struct mg_connection *nc, struct http_message *data);
 
 private:
   static const char *F_ADD_NODE,

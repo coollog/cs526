@@ -12,7 +12,9 @@ private:
 
   // All events are handled by eventNAME functions.
   static void eventReceive(struct mg_connection *nc, struct mbuf *data);
-  static void eventHTTP(struct mg_connection *nc, struct mbuf *data);
+  static void eventHTTP(struct mg_connection *nc,
+                        struct mbuf *rawData,
+                        struct http_message *data);
 
   static struct mg_mgr mgr;
 };
