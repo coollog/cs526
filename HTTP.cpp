@@ -1,5 +1,8 @@
 #include "HTTP.h"
 
+const char *HTTP::F_ADD_NODE = "/api/v1/add_node",
+           *HTTP::F_ADD_EDGE = "/api/v1/add_edge";
+
 void HTTP::request(struct mbuf *data) {
   struct http_message parsedRequest;
 
@@ -18,9 +21,9 @@ void HTTP::request(struct mbuf *data) {
 
   // Process different functions.
   const struct mg_str& uri = parsedRequest.uri;
-  if (!strncmp("add_node", uri.p, uri.len)) {
+  if (!strncmp(F_ADD_NODE, uri.p, uri.len)) {
     printf("Got add_node: %.*s\n", (int)uri.len, uri.p);
-  } else if (!strncmp("add_edge", uri.p, uri.len)) {
+  } else if (!strncmp(F_ADD_EDGE, uri.p, uri.len)) {
     printf("Got add_edge: %.*s\n", (int)uri.len, uri.p);
   } else {
     printf("Got bad URI: %.*s\n", (int)uri.len, uri.p);
