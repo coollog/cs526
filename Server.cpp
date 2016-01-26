@@ -40,11 +40,10 @@ void Server::handleEvent(struct mg_connection *nc, int type, void *evData) {
 void Server::eventReceive(struct mg_connection *nc, struct mbuf *data) {
   printf("MG_EV_RECV:\n%.*s\n", (int)data->len, data->buf);
 
-  HTTP::request(data);
+  HTTP::request(nc, data);
 
-  // // This event handler implements simple TCP echo server
-  // mg_send(nc, data->buf, data->len);  // Echo received data back
-  // mbuf_remove(data, data->len);       // Discard data from recv buffer
+  // Discard data from recv buffer.
+  mbuf_remove(data, data->len);
 }
 
 void Server::eventHTTP(struct mg_connection *nc, struct mbuf *data) {
