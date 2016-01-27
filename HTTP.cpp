@@ -40,6 +40,11 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
   struct json_token *json = parseJsonFromHTTPMessage(data);
   if (json == NULL) return;
 
+  // DEBUG CODE ONLY
+  // graph.addNode(81);
+  // graph.addNode(82);
+  // graph.addEdge(81, 82);
+
   // Process different functions.
   const struct mg_str& uri = data->uri;
 
