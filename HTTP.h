@@ -21,7 +21,7 @@ private:
                     *RC_204_OK,
                     *RC_400_BAD_REQUEST;
 
-  static const unsigned int JSON_MAX_LEN;
+  static const unsigned int JSON_MAX_LEN, REPLY_MAX_LEN;
 
   static bool checkMethodPOST(struct http_message *data);
   static struct json_token *parseJsonFromHTTPMessage(struct http_message *data);

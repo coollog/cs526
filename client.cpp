@@ -31,7 +31,16 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
                       "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
                       "Connection: keep-alive\r\n"
                       "Content-Length: 14\r\n"
-                      "\r\n{\"node_id\":71}");
+                      "\r\n{\"node_id\":71}\r\n");
+        mg_printf(nc, "POST /api/v1/add_node HTTP/1.1\r\n"
+                      "charset: utf-8\r\n"
+                      "Content-Type: application/json\r\n"
+                      "User-Agent: Java/1.7.0_71\r\n"
+                      "Host: localhost:1234\r\n"
+                      "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
+                      "Connection: keep-alive\r\n"
+                      "Content-Length: 14\r\n"
+                      "\r\n{\"node_id\":71}\r\n");
       } else {
         printf("Error connecting to %s: %s\n",
                s_target_address, strerror(connect_status));

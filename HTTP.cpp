@@ -13,7 +13,8 @@ const char *HTTP::RC_200_OK = "200 OK",
            *HTTP::RC_204_OK = "204 OK",
            *HTTP::RC_400_BAD_REQUEST = "400 Bad Request";
 
-const unsigned int HTTP::JSON_MAX_LEN = 1000;
+const unsigned int HTTP::JSON_MAX_LEN = 1000,
+                   HTTP::REPLY_MAX_LEN = 1000;
 
 Graph HTTP::graph;
 
@@ -77,16 +78,23 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
     return;
   }
 
+  char reply[REPLY_MAX_LEN];
+  int replyLen;
+
   if (responseCode == RC_200_OK) {
     const struct mg_str& body = data->body;
-    mg_printf(nc, "HTTP/1.1 %s\r\n"
-                  "Content-Length: %lu\r\n"
-                  "Content-Type: application/json\r\n"
-                  "\r\n%.*s",
-                  responseCode, body.len, (int)body.len, body.p);
+    replyLen = sprintf(reply, "HTTP/1.1 %s\r\n"
+                              "Content-Length: %lu\r\n"
+                              "Content-Type: application/json\r\n"
+                              "\r\n%.*s\r\n",
+                              responseCode, body.len, (int)body.len, body.p);
   } else {
-    mg_printf(nc, "HTTP/1.1 %s\r\n", responseCode);
+    replyLen = sprintf(reply, "HTTP/1.1 %s\r\n", responseCode);
   }
+
+  mg_send(nc, reply, replyLen);
+
+  printf("SENT:\n%.*s\n", replyLen, reply);
 }
 
 const char *HTTP::requestAddNode(struct json_token *json) {
@@ -94,7 +102,10 @@ const char *HTTP::requestAddNode(struct json_token *json) {
   const struct json_token *idToken = find_json_token(json, "node_id");
   unsigned int id = atoi(std::string(idToken->ptr, idToken->len).c_str());
 
-  if (graph.addNode(id) == -1) return RC_204_OK;
+  if (graph.addNode(id) == -1) {
+    printf("ADD NODE EXISTING NODE\n");
+    return RC_204_OK;
+  }
 
   return RC_200_OK;
 }
