@@ -114,6 +114,19 @@ const char *HTTP::requestAddNode(struct json_token *json) {
 }
 
 const char *HTTP::requestAddEdge(struct json_token *json) {
+  // Get the ids.
+  unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
+  unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
+
+  switch (graph.addEdge(id_a, id_b)) {
+  case -1:
+    printf("ADD EDGE INVALID\n");
+    return RC_204_OK;
+  case -2:
+    printf("ADD EDGE BAD NODE\n");
+    return RC_400_BAD_REQUEST;
+  }
+
   return RC_200_OK;
 }
 
