@@ -36,6 +36,7 @@ int Graph::addEdge(unsigned int id1, unsigned int id2) {
 
   // Make sure edge does not already exist.
   if (edgeExists(id1, id2)) return -1;
+  assert(!edgeExists(id2, id1));
 
   // Add edge.
   neighborList(id1)->insert(id2);
@@ -86,6 +87,7 @@ int Graph::getEdge(unsigned int id1, unsigned int id2) {
   // Make sure both nodes exist.
   if (!idExists(id1) || !idExists(id2)) return -2;
 
+  assert(edgeExists(id1, id2) == edgeExists(id2, id1));
   return edgeExists(id1, id2);
 }
 
