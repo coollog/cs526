@@ -89,7 +89,7 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
                               "\r\n%.*s\r\n",
                               responseCode, body.len, (int)body.len, body.p);
   } else {
-    replyLen = sprintf(reply, "HTTP/1.1 %s\r\n", responseCode);
+    replyLen = sprintf(reply, "HTTP/1.1 %s\r\n\r\n", responseCode);
   }
 
   mg_send(nc, reply, replyLen);
