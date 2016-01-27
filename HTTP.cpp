@@ -43,11 +43,6 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
     return;
   }
 
-  // DEBUG CODE ONLY
-  // graph.addNode(81);
-  // graph.addNode(82);
-  // graph.addEdge(81, 82);
-
   // Process different functions.
   const struct mg_str& uri = data->uri;
   const struct mg_str& body = data->body;
