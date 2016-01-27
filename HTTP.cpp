@@ -18,6 +18,10 @@ const unsigned int HTTP::JSON_MAX_LEN = 1000,
 
 Graph HTTP::graph;
 
+int HTTP::tokenToInt(struct json_token *token) {
+  return atoi(std::string(token->ptr, token->len).c_str());
+}
+
 bool HTTP::checkMethodPOST(struct http_message *data) {
   const struct mg_str& method = data->method;
   return strncmp(method.p, "POST", method.len) == 0;
@@ -99,8 +103,7 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
 
 const char *HTTP::requestAddNode(struct json_token *json) {
   // Get the id.
-  const struct json_token *idToken = find_json_token(json, "node_id");
-  unsigned int id = atoi(std::string(idToken->ptr, idToken->len).c_str());
+  unsigned int id = tokenToInt(find_json_token(json, "node_id"));
 
   if (graph.addNode(id) == -1) {
     printf("ADD NODE EXISTING NODE\n");
@@ -115,6 +118,14 @@ const char *HTTP::requestAddEdge(struct json_token *json) {
 }
 
 const char *HTTP::requestRemoveNode(struct json_token *json) {
+  // Get the id.
+  unsigned int id = tokenToInt(find_json_token(json, "node_id"));
+
+  if (graph.removeNode(id) == -2) {
+    printf("REMOVE NODE NONEXISTENT NODE\n");
+    return RC_400_BAD_REQUEST;
+  }
+
   return RC_200_OK;
 }
 

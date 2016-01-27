@@ -23,6 +23,8 @@ private:
 
   static const unsigned int JSON_MAX_LEN, REPLY_MAX_LEN;
 
+  static int tokenToInt(struct json_token *token);
+
   static bool checkMethodPOST(struct http_message *data);
   static struct json_token *parseJsonFromHTTPMessage(struct http_message *data);
 
