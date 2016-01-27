@@ -3,10 +3,10 @@
 #include <unordered_map>
 
 class Graph {
+public:
   typedef std::unordered_set<unsigned int> IdSet;
   typedef std::unordered_map<unsigned int, IdSet> NodeList;
 
-public:
   int addNode(unsigned int id);
   int addEdge(unsigned int id1, unsigned int id2);
   int removeNode(unsigned int id);

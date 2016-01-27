@@ -34,8 +34,12 @@ private:
   static const char *requestRemoveEdge(struct json_token *json);
   static const char *requestGetNode(struct json_token *json);
   static const char *requestGetEdge(struct json_token *json);
-  static const char *requestGetNeighbors(struct json_token *json);
-  static const char *requestShortestPath(struct json_token *json);
+  static const char *requestGetNeighbors(struct json_token *json,
+                                         char jsonBuf[],
+                                         int *jsonLen);
+  static const char *requestShortestPath(struct json_token *json,
+                                         char jsonBuf[],
+                                         int *jsonLen);
 
   static Graph graph;
 };

@@ -38,7 +38,10 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
 
   // Parse the JSON.
   struct json_token *json = parseJsonFromHTTPMessage(data);
-  if (json == NULL) return;
+  if (json == NULL) {
+    printf("ERROR PARSING JSON\n");
+    return;
+  }
 
   // DEBUG CODE ONLY
   // graph.addNode(81);
@@ -47,8 +50,12 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
 
   // Process different functions.
   const struct mg_str& uri = data->uri;
+  const struct mg_str& body = data->body;
 
   const char *responseCode;
+  char jsonBuf[JSON_MAX_LEN];
+  const char *responseBody = body.p;
+  int responseLen = body.len;
 
   if (!strncmp(F_ADD_NODE, uri.p, uri.len)) {
     printf("Got ADD_NODE: %.*s\n", (int)uri.len, uri.p);
@@ -76,11 +83,13 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
 
   } else if (!strncmp(F_GET_NEIGHBORS, uri.p, uri.len)) {
     printf("Got GET_NEIGHBORS: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestGetNeighbors(json);
+    responseCode = requestGetNeighbors(json, jsonBuf, &responseLen);
+    responseBody = jsonBuf;
 
   } else if (!strncmp(F_SHORTEST_PATH, uri.p, uri.len)) {
     printf("Got SHORTEST_PATH: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestShortestPath(json);
+    responseCode = requestShortestPath(json, jsonBuf, &responseLen);
+    responseBody = jsonBuf;
 
   } else {
     printf("Got bad URI: %.*s\n", (int)uri.len, uri.p);
@@ -91,12 +100,13 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
   int replyLen;
 
   if (responseCode == RC_200_OK) {
-    const struct mg_str& body = data->body;
     replyLen = sprintf(reply, "HTTP/1.1 %s\r\n"
-                              "Content-Length: %lu\r\n"
+                              "Content-Length: %d\r\n"
                               "Content-Type: application/json\r\n"
                               "\r\n%.*s\r\n",
-                              responseCode, body.len, (int)body.len, body.p);
+                              responseCode,
+                              responseLen,
+                              responseLen, responseBody);
   } else {
     replyLen = sprintf(reply, "HTTP/1.1 %s\r\n\r\n", responseCode);
   }
@@ -168,10 +178,32 @@ const char *HTTP::requestGetEdge(struct json_token *json) {
   return RC_200_OK;
 }
 
-const char *HTTP::requestGetNeighbors(struct json_token *json) {
+const char *HTTP::requestGetNeighbors(struct json_token *json,
+                                      char jsonBuf[],
+                                      int *jsonLen) {
+  // Get the id.
+  unsigned int id = tokenToInt(find_json_token(json, "node_id"));
+
+  Graph::IdSet *neighbors = graph.getNeighbors(id);
+  if (neighbors == NULL) {
+    printf("GET NEIGHBORS NONEXISTENT NODE\n");
+    return RC_400_BAD_REQUEST;
+  }
+
+  *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
+                       "{ s: i, s: [", "node_id", id, "neighbors");
+  for (unsigned int id: *neighbors) {
+    *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen,
+                          "i, ", id);
+  }
+  *jsonLen -= 2;
+  *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen, "] }");
+
   return RC_200_OK;
 }
 
-const char *HTTP::requestShortestPath(struct json_token *json) {
+const char *HTTP::requestShortestPath(struct json_token *json,
+                                      char jsonBuf[],
+                                      int *jsonLen) {
   return RC_200_OK;
 }
