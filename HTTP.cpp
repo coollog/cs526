@@ -44,9 +44,9 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
   }
 
   // DEBUG CODE ONLY
-  // graph.addNode(81);
-  // graph.addNode(82);
-  // graph.addEdge(81, 82);
+  graph.addNode(81);
+  graph.addNode(82);
+  graph.addEdge(81, 82);
 
   // Process different functions.
   const struct mg_str& uri = data->uri;
@@ -196,7 +196,7 @@ const char *HTTP::requestGetNeighbors(struct json_token *json,
     *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen,
                           "i, ", id);
   }
-  *jsonLen -= 2;
+  if (neighbors->size() > 0) *jsonLen -= 2;
   *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen, "] }");
 
   return RC_200_OK;
