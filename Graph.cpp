@@ -61,6 +61,9 @@ int Graph::removeNode(unsigned int id) {
 }
 
 int Graph::removeEdge(unsigned int id1, unsigned int id2) {
+  // Make sure both nodes exist.
+  if (!idExists(id1) || !idExists(id2)) return -2;
+
   IdSet *neighbors1 = neighborList(id1);
   IdSet *neighbors2 = neighborList(id2);
 

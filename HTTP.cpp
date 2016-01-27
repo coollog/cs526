@@ -143,6 +143,15 @@ const char *HTTP::requestRemoveNode(struct json_token *json) {
 }
 
 const char *HTTP::requestRemoveEdge(struct json_token *json) {
+  // Get the ids.
+  unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
+  unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
+
+  if (graph.removeEdge(id_a, id_b) == -2) {
+    printf("REMOVE EDGE NONEXISTENT EDGE\n");
+    return RC_400_BAD_REQUEST;
+  }
+
   return RC_200_OK;
 }
 
