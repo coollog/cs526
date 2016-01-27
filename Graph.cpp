@@ -69,6 +69,7 @@ int Graph::removeEdge(unsigned int id1, unsigned int id2) {
 
   // Make sure edge exists.
   if (!idInSet(neighbors1, id2)) return -2;
+  ASSERT(idInSet(neighbors2, id1))
 
   // Remove edge.
   neighbors1->erase(id2);
