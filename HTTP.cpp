@@ -205,5 +205,22 @@ const char *HTTP::requestGetNeighbors(struct json_token *json,
 const char *HTTP::requestShortestPath(struct json_token *json,
                                       char jsonBuf[],
                                       int *jsonLen) {
+  // Get the ids.
+  unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
+  unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
+
+  int dist = graph.shortestPath(id_a, id_b);
+  switch (dist) {
+  case -1:
+    printf("SHORTEST PATH NO PATH\n");
+    return RC_204_OK;
+  case -2:
+    printf("SHORTEST PATH NONEXISTENT NODE\n");
+    return RC_400_BAD_REQUEST;
+  }
+
+  *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
+                       "{ s: i }", "distance", dist);
+
   return RC_200_OK;
 }
