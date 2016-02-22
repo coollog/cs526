@@ -22,8 +22,12 @@ bool Log::diskOpen() {
   }
 
   diskFd = open("/dev/sdc", O_RDWR | O_SYNC);
+  if (diskFd == -1) {
+    setErrno(-3);
+    return false;
+  }
 
-  return diskFd != -1;
+  return true;
 }
 bool Log::isOpen() {
   if (diskFd == -1) return false;
