@@ -17,7 +17,7 @@ void Log::setErrno(int en) {
 
 bool Log::diskOpen() {
   if (isOpen()) {
-    printf("disk already open\n");
+    setErrno(-2);
     return true;
   }
 
