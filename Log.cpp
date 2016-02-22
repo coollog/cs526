@@ -20,9 +20,10 @@ bool Log::diskOpen() {
 
   diskFd = open("/dev/sdc", 0);
 
-  return isOpen();
+  return diskFd != -1;
 }
 bool Log::isOpen() {
+  if (diskFd == -1) return false;
   return fcntl(diskFd, F_GETFD) != -1 || errno != EBADF;
 }
 bool Log::diskClose() {
@@ -35,7 +36,10 @@ bool Log::diskSeek(off_t offset) {
 }
 
 bool Log::readMetadata() {
-  invariant(isOpen());
+  if (!diskOpen()) {
+    setErrno(errno);
+    return false;
+  }
 
   if (!diskSeek(0)) {
     setErrno(errno);
@@ -53,7 +57,10 @@ bool Log::readMetadata() {
 }
 
 bool Log::reset() {
-  invariant(isOpen());
+  if (!diskOpen()) {
+    setErrno(errno);
+    return false;
+  }
 
   if (!diskSeek(0)) {
     setErrno(errno);

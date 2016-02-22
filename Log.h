@@ -42,8 +42,8 @@ public:
 
 private:
   Metadata metadata;
-  int diskFd;
-  int lastError;
+  int diskFd = -1;
+  int lastError = 0;
 
   void setErrno(int en);
 
