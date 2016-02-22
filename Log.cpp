@@ -44,7 +44,7 @@ bool Log::readMetadata() {
 
   size_t metadataSize = sizeof(metadata);
   ssize_t size = read(diskFd, &metadata, metadataSize);
-  if (size != metadataSize) {
+  if (size != (ssize_t)metadataSize) {
     setErrno(-1);
     return false;
   }
@@ -66,7 +66,7 @@ bool Log::reset() {
 
   size_t metadataSize = sizeof(metadata);
   ssize_t size = write(diskFd, &metadata, metadataSize);
-  if (size != metadataSize) {
+  if (size != (ssize_t)metadataSize) {
     setErrno(-1);
     return false;
   }
