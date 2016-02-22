@@ -123,7 +123,7 @@ int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
   while (nodeQueue.size() > 0) {
     // Get the min dist node.
     int minDist = INT_MAX;
-    unsigned int minDistId = -1;
+    int minDistId = -1;
 
     for (unsigned int id: nodeQueue) {
       if (minDistId == -1 || dist[id] < minDist) {
