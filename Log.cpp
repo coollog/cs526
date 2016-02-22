@@ -18,7 +18,7 @@ void Log::setErrno(int en) {
 bool Log::diskOpen() {
   if (isOpen()) return true;
 
-  diskFd = open("/dev/sdc", 0);
+  diskFd = open("/dev/sdc", 0, O_RDWR | O_SYNC);
 
   return diskFd != -1;
 }
