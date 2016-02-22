@@ -1,37 +1,40 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 class Log {
-  const BLOCK_SIZE = 0x1000;
+  const size_t BLOCK_SIZE = 0x1000;
 
   // Holds the data in the superblock.
-  struct {
+  typedef struct {
     unsigned int start;
     unsigned int size;
     unsigned int head;
   } Metadata;
 
   // Holds the header entry in a block.
-  struct {
+  typedef struct {
     unsigned int opCode;
     unsigned int id1;
     unsigned int id2;
   } EntryHeader;
 
   // Holds each entry in a block.
-  struct {
+  typedef struct {
     char byte[12];
   } Entry;
 
   // Holds the header of a block.
-  struct {
+  typedef struct {
     unsigned int generation;
     unsigned int entryCount;
     EntryHeader entryHeader;
   } BlockHeader;
 
 public:
+  bool init();
+  bool readMetadata();
 
 private:
   Metadata metadata;
@@ -42,7 +45,6 @@ private:
   bool diskClose();
   bool diskSeek(off_t offset);
 
-  bool readMetadata();
   void readBlock(unsigned int blockId);
 
   bool reset();

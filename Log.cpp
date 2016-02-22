@@ -1,3 +1,10 @@
+#include "utilities.h"
+#include "Log.h"
+
+bool Log::init() {
+  return diskOpen();
+}
+
 bool Log::diskOpen() {
   if (isOpen()) return true;
 
@@ -23,7 +30,7 @@ bool Log::readMetadata() {
   if (!diskSeek(0)) return false;
 
   size_t metadataSize = sizeof(metadata);
-  ssize_t size = read(fd, &metadata, metadataSize);
+  ssize_t size = read(diskFd, &metadata, metadataSize);
   if (size != metadataSize) return false;
 
   return true;
