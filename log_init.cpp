@@ -19,14 +19,7 @@ int main(int argc, char *argv[]) {
   }
   printf("successful open\n");
 
-  if (!diskLog.readMetadata()) {
-    printf("error: %d\n", diskLog.getErrno());
-    return 1;
-  }
-  printf("successful metadata read\n");
-
-  Log::Metadata md = diskLog.getMetadata();
-  printf("metadata start: %d, size: %d, head: %d\n", md.start, md.size, md.head);
+  diskLog.reset(100, Log::RESET_VERBOSE);
 
   diskLog.finish();
 

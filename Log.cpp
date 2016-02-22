@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "utilities.h"
 #include "Log.h"
 
@@ -63,19 +64,53 @@ bool Log::readMetadata() {
   return true;
 }
 
-bool Log::reset() {
+bool Log::reset(unsigned int size) {
+  return reset(size, 0);
+}
+
+bool Log::reset(unsigned int size, int flags) {
+  if (!diskOpen()) return false;
+
+  if (!resetMetadata()) return false;
+
+  for (unsigned int id = 1; id <= size; id ++) {
+    if (flags | RESET_VERBOSE) {
+      printf("resetting block %u\n", id);
+    }
+    if (!resetBlock(id)) return false;
+  }
+
+  return true;
+}
+
+bool Log::resetMetadata(unsigned int size) {
   if (!diskOpen()) return false;
 
   if (!diskSeek(0)) return false;
 
   metadata.start = 1;
-  metadata.size = 0;
+  metadata.size = size;
   metadata.head = 1;
 
   size_t metadataSize = sizeof(metadata);
   ssize_t size = write(diskFd, &metadata, metadataSize);
   if (size != (ssize_t)metadataSize) {
-    setErrno(-1);
+    setErrno(errno);
+    return false;
+  }
+
+  return true;
+}
+
+bool Log::resetBlock(unsigned int id) {
+  if (!diskOpen()) return false;
+
+  off_t offset = id * BLOCK_SIZE;
+  if (!diskSeek(offset)) return false;
+
+  ssize_t size = write(diskFd, EMPTY_BLOCK, BLOCK_SIZE);
+  if (size != BLOCK_SIZE) {
+    setErrno(errno);
     return false;
   }
 

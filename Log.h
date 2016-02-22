@@ -5,7 +5,8 @@
 #include <errno.h>
 
 class Log {
-  const size_t BLOCK_SIZE = 0x1000;
+  static constexpr size_t BLOCK_SIZE = 0x1000;
+  const char EMPTY_BLOCK[BLOCK_SIZE] = {0};
 
   // Holds the header entry in a block.
   typedef struct {
@@ -27,6 +28,10 @@ class Log {
   } BlockHeader;
 
 public:
+  enum {
+    RESET_VERBOSE
+  };
+
   // Holds the data in the superblock.
   typedef struct {
     unsigned int start;
@@ -35,7 +40,8 @@ public:
   } Metadata;
 
   bool init();
-  bool reset();
+  bool reset(unsigned int size);
+  bool reset(unsigned int size, int flags);
   bool readMetadata();
   bool finish();
 
@@ -55,4 +61,8 @@ private:
   bool diskSeek(off_t offset);
 
   void readBlock(unsigned int blockId);
+
+  // Helper functions for reset().
+  bool resetMetadata(unsigned int size);
+  bool resetBlock(unsigned int id);
 };
