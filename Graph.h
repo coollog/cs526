@@ -12,10 +12,11 @@ public:
   int addEdge(unsigned int id1, unsigned int id2);
   int removeNode(unsigned int id);
   int removeEdge(unsigned int id1, unsigned int id2);
-  int getNode(unsigned int id);
+  bool getNode(unsigned int id);
   int getEdge(unsigned int id1, unsigned int id2);
   IdSet *getNeighbors(unsigned int id);
   int shortestPath(unsigned int id1, unsigned int id2);
+  bool checkpoint();
 
 private:
   bool idExists(unsigned int id);

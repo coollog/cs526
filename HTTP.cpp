@@ -7,11 +7,13 @@ const char *HTTP::F_ADD_NODE = "/api/v1/add_node",
            *HTTP::F_GET_NODE = "/api/v1/get_node",
            *HTTP::F_GET_EDGE = "/api/v1/get_edge",
            *HTTP::F_GET_NEIGHBORS = "/api/v1/get_neighbors",
-           *HTTP::F_SHORTEST_PATH = "/api/v1/shortest_path";
+           *HTTP::F_SHORTEST_PATH = "/api/v1/shortest_path",
+           *HTTP::F_CHECKPOINT = "/api/v1/checkpoint";
 
 const char *HTTP::RC_200_OK = "200 OK",
            *HTTP::RC_204_OK = "204 OK",
-           *HTTP::RC_400_BAD_REQUEST = "400 Bad Request";
+           *HTTP::RC_400_BAD_REQUEST = "400 Bad Request",
+           *HTTP::RC_507_INSUFFICIENT_SPACE = "507 Insufficient Space";
 
 const unsigned int HTTP::JSON_MAX_LEN = 1000,
                    HTTP::REPLY_MAX_LEN = 1000;
@@ -70,11 +72,11 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
 
   } else if (!strncmp(F_GET_NODE, uri.p, uri.len)) {
     printf("Got GET_NODE: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestGetNode(json);
+    responseCode = requestGetNode(json, jsonBuf, &responseLen);
 
   } else if (!strncmp(F_GET_EDGE, uri.p, uri.len)) {
     printf("Got GET_EDGE: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestGetEdge(json);
+    responseCode = requestGetEdge(json, jsonBuf, &responseLen);
 
   } else if (!strncmp(F_GET_NEIGHBORS, uri.p, uri.len)) {
     printf("Got GET_NEIGHBORS: %.*s\n", (int)uri.len, uri.p);
@@ -85,6 +87,10 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
     printf("Got SHORTEST_PATH: %.*s\n", (int)uri.len, uri.p);
     responseCode = requestShortestPath(json, jsonBuf, &responseLen);
     responseBody = jsonBuf;
+
+  } else if (!strncmp(F_CHECKPOINT, uri.p, uri.len)) {
+    printf("Got CHECKPOINT: %.*s\n", (int)uri.len, uri.p);
+    responseCode = requestCheckpoint(json);
 
   } else {
     printf("Got bad URI: %.*s\n", (int)uri.len, uri.p);
@@ -165,11 +171,36 @@ const char *HTTP::requestRemoveEdge(struct json_token *json) {
   return RC_200_OK;
 }
 
-const char *HTTP::requestGetNode(struct json_token *json) {
+const char *HTTP::requestGetNode(struct json_token *json,
+                                 char jsonBuf[],
+                                 int *jsonLen) {
+  // Get the id.
+  unsigned int id = tokenToInt(find_json_token(json, "node_id"));
+
+  bool inGraph = graph.getNode(id);
+
+  *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
+                       "{ s: i }", "in_graph", inGraph);
+
   return RC_200_OK;
 }
 
-const char *HTTP::requestGetEdge(struct json_token *json) {
+const char *HTTP::requestGetEdge(struct json_token *json,
+                                 char jsonBuf[],
+                                 int *jsonLen) {
+  // Get the ids.
+  unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
+  unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
+
+  int inGraph = graph.getEdge(id_a, id_b);
+  if (inGraph == -2) {
+    printf("GET EDGE BAD NODE\n");
+    return RC_400_BAD_REQUEST;
+  }
+
+  const char *format = inGraph ? "{ s: T }" : "{ s: F }";
+  *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN, format, "in_graph");
+
   return RC_200_OK;
 }
 
@@ -216,6 +247,15 @@ const char *HTTP::requestShortestPath(struct json_token *json,
 
   *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
                        "{ s: i }", "distance", dist);
+
+  return RC_200_OK;
+}
+
+const char *HTTP::requestCheckpoint(struct json_token *json) {
+  if (!graph.checkpoint()) {
+    printf("CHECKPOINT INSUFFICIENT SPACE\n");
+    return RC_507_INSUFFICIENT_SPACE;
+  }
 
   return RC_200_OK;
 }

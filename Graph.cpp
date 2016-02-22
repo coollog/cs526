@@ -79,7 +79,7 @@ int Graph::removeEdge(unsigned int id1, unsigned int id2) {
   return 0;
 }
 
-int Graph::getNode(unsigned int id) {
+bool Graph::getNode(unsigned int id) {
   return idExists(id);
 }
 
@@ -150,4 +150,10 @@ int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
   }
 
   return -1;
+}
+
+bool Graph::checkpoint() {
+  // TODO: Add implementation.
+
+  return true;
 }
