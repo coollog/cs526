@@ -26,7 +26,7 @@ bool Log::isOpen() {
   if (diskFd == -1) return false;
   int fdOpen = fcntl(diskFd, F_GETFD);
   if (fdOpen == -1 && errno == EBADF) {
-    setError(errno);
+    setErrno(errno);
     return false;
   }
   return true;
