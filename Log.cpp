@@ -8,12 +8,6 @@ bool Log::finish() {
   invariant(isOpen());
   return diskClose();
 }
-int Log::getErrno() {
-  return lastError;
-}
-void Log::setErrno(int en) {
-  lastError = en;
-}
 
 bool Log::diskOpen() {
   if (isOpen()) {

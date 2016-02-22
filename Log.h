@@ -38,14 +38,15 @@ public:
   bool readMetadata();
   bool finish();
 
-  int getErrno();
+  int getErrno() { return lastError; }
+  Metadata getMetadata() { return metadata }
 
 private:
   Metadata metadata;
   int diskFd = -1;
   int lastError = 0;
 
-  void setErrno(int en);
+  void setErrno(int en) { lastError = en; }
 
   bool diskOpen();
   bool isOpen();
