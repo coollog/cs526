@@ -23,7 +23,7 @@ bool Log::diskOpen() {
   return isOpen();
 }
 bool Log::isOpen() {
-  return diskFd != -1;
+  return fcntl(diskFd, F_GETFD) != -1 || errno != EBADF;
 }
 bool Log::diskClose() {
   diskFd = -1;
