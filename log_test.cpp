@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
   }
   printf("successful metadata read\n");
 
-  Metadata md = diskLog.getMetadata();
+  Log::Metadata md = diskLog.getMetadata();
   printf("metadata start: %d, size: %d, head: %d\n", md.start, md.size, md.head);
 
   diskLog.finish();
