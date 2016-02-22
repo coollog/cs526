@@ -16,19 +16,24 @@ void Log::setErrno(int en) {
 }
 
 bool Log::diskOpen() {
-  if (isOpen()) return true;
+  if (isOpen()) {
+    printf("disk already open\n");
+    return true;
+  }
 
-  diskFd = open("/dev/sdc", 0, O_RDWR | O_SYNC);
+  diskFd = open("/dev/sdc", O_RDWR | O_SYNC);
 
   return diskFd != -1;
 }
 bool Log::isOpen() {
   if (diskFd == -1) return false;
+
   int fdOpen = fcntl(diskFd, F_GETFD);
   if (fdOpen == -1 && errno == EBADF) {
     setErrno(errno);
     return false;
   }
+
   return true;
 }
 bool Log::diskClose() {
