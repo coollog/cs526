@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 
 class Log {
   const size_t BLOCK_SIZE = 0x1000;
@@ -35,10 +36,16 @@ class Log {
 public:
   bool init();
   bool readMetadata();
+  bool finish();
+
+  int getErrno();
 
 private:
   Metadata metadata;
   int diskFd;
+  int lastError;
+
+  void setErrno(int en);
 
   bool diskOpen();
   bool isOpen();

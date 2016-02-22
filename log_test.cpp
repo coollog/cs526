@@ -13,11 +13,19 @@ using namespace std;
 int main(int argc, char *argv[]) {
   Log diskLog;
 
-  if (!diskLog.init()) return 1;
+  if (!diskLog.init()) {
+    printf("error: %d\n", diskLog.getErrno());
+    return 1;
+  }
   printf("successful open\n");
 
-  if (!diskLog.readMetadata()) return 1;
+  if (!diskLog.readMetadata()) {
+    printf("error: %d\n", diskLog.getErrno());
+    return 1;
+  }
   printf("successful metadata read\n");
+
+  diskLog.finish();
 
   return 0;
 }

@@ -4,6 +4,16 @@
 bool Log::init() {
   return diskOpen();
 }
+bool Log::finish() {
+  invariant(isOpen());
+  return diskClose();
+}
+int Log::getErrno() {
+  return lastError;
+}
+void Log::setErrno(int en) {
+  lastError = en;
+}
 
 bool Log::diskOpen() {
   if (isOpen()) return true;
@@ -27,11 +37,17 @@ bool Log::diskSeek(off_t offset) {
 bool Log::readMetadata() {
   invariant(isOpen());
 
-  if (!diskSeek(0)) return false;
+  if (!diskSeek(0)) {
+    setErrno(errno);
+    return false;
+  }
 
   size_t metadataSize = sizeof(metadata);
   ssize_t size = read(diskFd, &metadata, metadataSize);
-  if (size != metadataSize) return false;
+  if (size != metadataSize) {
+    setErrno(-1);
+    return false;
+  }
 
   return true;
 }
@@ -39,7 +55,10 @@ bool Log::readMetadata() {
 bool Log::reset() {
   invariant(isOpen());
 
-  if (!diskSeek(0)) return false;
+  if (!diskSeek(0)) {
+    setErrno(errno);
+    return false;
+  }
 
   metadata.start = 1;
   metadata.size = 0;
@@ -47,7 +66,10 @@ bool Log::reset() {
 
   size_t metadataSize = sizeof(metadata);
   ssize_t size = write(diskFd, &metadata, metadataSize);
-  if (size != metadataSize) return false;
+  if (size != metadataSize) {
+    setErrno(-1);
+    return false;
+  }
 
   return true;
 }
