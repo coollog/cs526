@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
   }
   printf("successful reset\n");
 
-  Log::Metadata md = diskLog.getMetadata();
+  md = diskLog.getMetadata();
   printf("metadata start: %d, size: %d, head: %d\n", md.start, md.size, md.head);
 
   diskLog.finish();

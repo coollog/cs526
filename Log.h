@@ -40,7 +40,7 @@ public:
   bool finish();
 
   int getErrno() { return lastError; }
-  Metadata getMetadata() { return metadata; }
+  const Metadata& getMetadata() { return metadata; }
 
 private:
   Metadata metadata;
