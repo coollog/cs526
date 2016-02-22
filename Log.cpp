@@ -71,7 +71,7 @@ bool Log::reset(unsigned int size) {
 bool Log::reset(unsigned int size, int flags) {
   if (!diskOpen()) return false;
 
-  if (!resetMetadata()) return false;
+  if (!resetMetadata(size)) return false;
 
   for (unsigned int id = 1; id <= size; id ++) {
     if (flags | RESET_VERBOSE) {
@@ -93,8 +93,8 @@ bool Log::resetMetadata(unsigned int size) {
   metadata.head = 1;
 
   size_t metadataSize = sizeof(metadata);
-  ssize_t size = write(diskFd, &metadata, metadataSize);
-  if (size != (ssize_t)metadataSize) {
+  ssize_t writeSize = write(diskFd, &metadata, metadataSize);
+  if (writeSize != (ssize_t)metadataSize) {
     setErrno(errno);
     return false;
   }
@@ -108,8 +108,8 @@ bool Log::resetBlock(unsigned int id) {
   off_t offset = id * BLOCK_SIZE;
   if (!diskSeek(offset)) return false;
 
-  ssize_t size = write(diskFd, EMPTY_BLOCK, BLOCK_SIZE);
-  if (size != BLOCK_SIZE) {
+  ssize_t writeSize = write(diskFd, EMPTY_BLOCK, BLOCK_SIZE);
+  if (writeSize != BLOCK_SIZE) {
     setErrno(errno);
     return false;
   }
