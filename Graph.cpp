@@ -132,7 +132,7 @@ int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
       }
     }
 
-    if (minDistId == idDest) {
+    if (minDistId == (int)idDest) {
       return dist[idDest];
     }
 
