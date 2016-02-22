@@ -29,6 +29,7 @@ class Log {
 
 public:
   enum {
+    RESET_NORMAL,
     RESET_VERBOSE
   };
 

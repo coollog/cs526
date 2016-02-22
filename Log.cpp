@@ -65,7 +65,7 @@ bool Log::readMetadata() {
 }
 
 bool Log::reset(unsigned int size) {
-  return reset(size, 0);
+  return reset(size, RESET_NORMAL);
 }
 
 bool Log::reset(unsigned int size, int flags) {
