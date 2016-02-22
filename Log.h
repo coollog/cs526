@@ -35,6 +35,7 @@ public:
   } Metadata;
 
   bool init();
+  bool reset();
   bool readMetadata();
   bool finish();
 
@@ -54,6 +55,4 @@ private:
   bool diskSeek(off_t offset);
 
   void readBlock(unsigned int blockId);
-
-  bool reset();
 };

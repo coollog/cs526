@@ -5,15 +5,12 @@ bool Log::init() {
   return diskOpen();
 }
 bool Log::finish() {
-  invariant(isOpen());
+  if (!isOpen()) return true;
   return diskClose();
 }
 
 bool Log::diskOpen() {
-  if (isOpen()) {
-    setErrno(-2);
-    return true;
-  }
+  if (isOpen()) return true;
 
   diskFd = open("/dev/sdc", O_RDWR | O_SYNC);
   if (diskFd == -1) {
@@ -24,7 +21,10 @@ bool Log::diskOpen() {
   return true;
 }
 bool Log::isOpen() {
-  if (diskFd == -1) return false;
+  if (diskFd == -1) {
+    setErrno(-2);
+    return false;
+  }
 
   int fdOpen = fcntl(diskFd, F_GETFD);
   if (fdOpen == -1 && errno == EBADF) {
@@ -40,19 +40,18 @@ bool Log::diskClose() {
 }
 bool Log::diskSeek(off_t offset) {
   off_t off = lseek(diskFd, offset, SEEK_SET);
-  return off == offset;
+
+  if (off != offset) {
+    setErrno(errno);
+    return false;
+  }
+  return true;
 }
 
 bool Log::readMetadata() {
-  if (!diskOpen()) {
-    setErrno(errno);
-    return false;
-  }
+  if (!diskOpen()) return false;
 
-  if (!diskSeek(0)) {
-    setErrno(errno);
-    return false;
-  }
+  if (!diskSeek(0)) return false;
 
   size_t metadataSize = sizeof(metadata);
   ssize_t size = read(diskFd, &metadata, metadataSize);
@@ -65,15 +64,9 @@ bool Log::readMetadata() {
 }
 
 bool Log::reset() {
-  if (!diskOpen()) {
-    setErrno(errno);
-    return false;
-  }
+  if (!diskOpen()) return false;
 
-  if (!diskSeek(0)) {
-    setErrno(errno);
-    return false;
-  }
+  if (!diskSeek(0)) return false;
 
   metadata.start = 1;
   metadata.size = 0;

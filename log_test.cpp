@@ -28,6 +28,15 @@ int main(int argc, char *argv[]) {
   Log::Metadata md = diskLog.getMetadata();
   printf("metadata start: %d, size: %d, head: %d\n", md.start, md.size, md.head);
 
+  if (!diskLog.reset()) {
+    printf("error: %d\n", diskLog.getErrno());
+    return 1;
+  }
+  printf("successful reset\n");
+
+  Log::Metadata md = diskLog.getMetadata();
+  printf("metadata start: %d, size: %d, head: %d\n", md.start, md.size, md.head);
+
   diskLog.finish();
 
   return 0;
