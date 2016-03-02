@@ -27,11 +27,6 @@ class Log {
   // Total number of entries allowed. Entries start at id 0.
   static const uint32_t MAX_ENTRY_COUNT = 204;
 
-  // Header for the checkpoint.
-  typedef struct {
-    size_t size; // How many bytes the graph takes up.
-  } CheckpointHeader;
-
   typedef struct {
     BlockHeader header;
     Entry entries[MAX_ENTRY_COUNT];
@@ -48,7 +43,8 @@ public:
   // Holds the data in the superblock.
   typedef struct {
     uint32_t generation = 0;
-    uint32_t size = 100;
+    uint32_t logSize = 100;
+    uint32_t checkpointSize;
   } Metadata;
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
@@ -64,7 +60,7 @@ public:
   static bool playback(Entry *entry);
   // Adds an entry to the log.
   static bool add(uint32_t opCode, uint64_t id1, uint64_t id2);
-  static bool outOfSpace() { return currentHead >= metadata.size; }
+  static bool outOfSpace() { return currentHead >= metadata.logSize; }
   // Unlinks the entire log/checkpoint.
   static bool erase();
   static bool finish();
@@ -101,7 +97,7 @@ private:
   static off_t getEntryOffset(uint32_t entryId)
     { return sizeof(BlockHeader) + entryId * sizeof(Entry); }
   static bool isValidBlockId(uint32_t blockId)
-    { return blockId < metadata.size; }
+    { return blockId < metadata.logSize; }
   static bool isValidEntryId(uint32_t entryId)
     { return entryId < MAX_ENTRY_COUNT; }
 
@@ -129,9 +125,7 @@ private:
   static bool writeBlockEntry(
     uint32_t blockId, uint32_t entryId, const Entry *entry);
 
-  static off_t getCheckpointOffset() { return metadata.size * BLOCK_SIZE; }
-  static bool readCheckpointHeader(CheckpointHeader *header); // Caller owns pointer.
-  static bool writeCheckpointHeader(const CheckpointHeader *header);
+  static off_t getCheckpointOffset() { return metadata.logSize * BLOCK_SIZE; }
 
   static Metadata metadata;
   static BlockBuffer blockBuffer;

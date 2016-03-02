@@ -264,35 +264,16 @@ bool Log::resetMetadata() {
   return writeMetadata();
 }
 
-bool Log::readCheckpointHeader(CheckpointHeader *header) {
-  return diskRead(getCheckpointOffset(), header, sizeof(CheckpointHeader));
-}
-
-bool Log::writeCheckpointHeader(const CheckpointHeader *header) {
-  return diskWrite(getCheckpointOffset(), header, sizeof(CheckpointHeader));
-}
-
 bool Log::readCheckpoint(void *buf) {
-  CheckpointHeader header;
-
-  if (!readCheckpointHeader(&header)) return false;
-
-  size_t size = header.size;
-  if (!diskRead(getCheckpointOffset() + sizeof(CheckpointHeader), buf, size))
-    return false;
-
-  return true;
+  return diskRead(getCheckpointOffset(), buf, metadata.checkpointSize));
 }
 
 bool Log::writeCheckpoint(const void *data, size_t size) {
-  if (!diskOpen()) return false;
-
-  CheckpointHeader header = { size };
-  if (!writeCheckpointHeader(&header)) return false;
+  metadata.checkpointSize = size;
+  if (!writeMetadata()) return false;
 
   // Write checkpoint data.
-  if (!diskWrite(getCheckpointOffset() + sizeof(CheckpointHeader), data, size))
-    return false;
+  if (!diskWrite(getCheckpointOffset(), data, size)) return false;
 
   // Reset the entire log (aka garbage collect).
   if (!reset()) return false;
@@ -301,10 +282,8 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
 }
 
 bool Log::erase() {
-  CheckpointHeader header = { 0 };
-  if (!writeCheckpointHeader(&header)) return false;
-
   metadata.generation = 0;
+  metadata.checkpointSize = 0;
   if (!writeMetadata()) return false;
 
   currentHead = 1;

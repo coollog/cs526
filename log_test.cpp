@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
   printf("successful init\n");
 
   Log::Metadata md = Log::getMetadata();
-  printf("metadata generation: %u, size: %u\n",
-         md.generation, md.size);
+  printf("metadata generation: %u, size: %u, cpsize: %u\n",
+         md.generation, md.logSize, md.checkpointSize);
 
   Log::finish();
 
