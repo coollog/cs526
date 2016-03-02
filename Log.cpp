@@ -153,7 +153,7 @@ bool Log::bufferBlock(uint32_t blockId) {
   if (blockBuffer.blockId == blockId &&
       blockBuffer.ready &&
       !blockBuffer.dirty) return true;
-  if (!diskRead(getBlockOffset(blockId), &blockBuffer.block, 0x1000))
+  if (!diskRead(getBlockOffset(blockId), blockBuffer.block, 0x1000))
     return false;
 
   blockBuffer.blockId = blockId;
@@ -173,7 +173,7 @@ bool Log::bufferBlockWriteBack() {
 
 bool Log::readMetadata() {
   if (!bufferBlock(0)) return false;
-  memcpy(&metadata, &blockBuffer.block, sizeof(Metadata));
+  memcpy(&metadata, blockBuffer.block, sizeof(Metadata));
   return true;
 }
 
