@@ -11,6 +11,11 @@ using namespace std;
 #include "Log.h"
 
 int main(int argc, char *argv[]) {
+  if (!Log::init("/dev/sdc")) {
+    printf("error: %d\n", Log::getErrno());
+    return 1;
+  }
+
   Log::erase();
   printf("successful erase\n");
 
