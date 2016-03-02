@@ -53,7 +53,7 @@ public:
   bool add(uint32_t opCode, uint64_t id1, uint64_t id2);
   bool outOfSpace() { return currentHead >= metadata.size; }
   // Unlinks the entire log/checkpoint.
-  void erase();
+  void erase(uint32_t size);
   bool finish();
 
   int getErrno() { return lastError; }

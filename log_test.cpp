@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
   printf("successful init\n");
 
   Log::Metadata md = diskLog.getMetadata();
-  printf("metadata start: %d, size: %d, head: %d\n", md.start, md.size, md.head);
+  printf("metadata generation: %d, size: %d, head: %d\n",
+         md.generation, md.size);
 
   diskLog.finish();
 
