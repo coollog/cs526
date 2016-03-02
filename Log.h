@@ -62,7 +62,7 @@ public:
   bool verbose = false;
 
 private:
-  static const char *devFile;
+  static const char *DEV_FILE;
 
   void setErrno(int en) { lastError = en; }
 

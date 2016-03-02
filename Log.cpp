@@ -2,8 +2,10 @@
 #include "utilities.h"
 #include "Log.h"
 
+const char *Log::DEV_FILE;
+
 void Log::setDevFile(const char *fname) {
-  devFile = fname;
+  DEV_FILE = fname;
 }
 
 bool Log::init() {
