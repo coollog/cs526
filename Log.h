@@ -32,8 +32,8 @@ class Log {
 public:
   // Holds the data in the superblock.
   typedef struct {
-    uint32_t size;
     uint32_t generation;
+    uint32_t size;
   } Metadata;
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
