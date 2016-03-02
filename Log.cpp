@@ -141,17 +141,19 @@ bool Log::bufferBlock(uint32_t blockId) {
 
   return true;
 }
-void Log::bufferBlockFromMem(uint32_t blockId,
+bool Log::bufferBlockFromMem(uint32_t blockId,
                              const void *src,
                              off_t offset,
                              size_t size) {
   if (!isValidBlockId(blockId)) return false;
 
-  memcpy(bufferBlock.block, src + offset, size);
+  memcpy(blockBuffer.block + offset, src, size);
 
   blockBuffer.blockId = blockId;
   blockBuffer.ready = true;
   blockBuffer.dirty = true;
+
+  return true;
 }
 bool Log::bufferBlockToMem(uint32_t blockId,
                            void *dest,
@@ -160,7 +162,7 @@ bool Log::bufferBlockToMem(uint32_t blockId,
   if (!isValidBlockId(blockId)) return false;
 
   if (!bufferBlock(blockId)) return false;
-  memcpy(dest + offset, blockBuffer.block, sizeof(Metadata));
+  memcpy(dest, blockBuffer.block + offset, sizeof(Metadata));
   return true;
 }
 bool Log::bufferBlockWriteBack() {
@@ -177,10 +179,10 @@ bool Log::bufferBlockWriteBack() {
 }
 
 bool Log::readMetadata() {
-  return bufferBlockToMem(0, &metadata, sizeof(Metadata));
+  return bufferBlockToMem(0, &metadata, 0, sizeof(Metadata));
 }
 bool Log::writeMetadata() {
-  bufferBlockFromMem(0, &metadata, sizeof(Metadata));
+  if (!bufferBlockFromMem(0, &metadata, 0, sizeof(Metadata))) return false;
 
   if (!bufferBlockWriteBack()) return false;
 
@@ -242,7 +244,6 @@ bool Log::writeBlockEntry(uint32_t blockId,
   // Make sure the block is not full.
   if (!isValidEntryId(entryId)) return false;
 
-  off_t entryOffset = ;
   if (!bufferBlockFromMem(
     blockId, entry, getEntryOffset(entryId), sizeof(Entry))) return false;
 

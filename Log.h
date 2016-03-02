@@ -108,7 +108,7 @@ private:
   static bool bufferBlock(uint32_t blockId);
   static bool bufferBlockWriteBack();
   // Copy 'size' bytes memory from 'src' to the buffer+'offset'.
-  static void bufferBlockFromMem(
+  static bool bufferBlockFromMem(
     uint32_t blockId, const void *src, off_t offset, size_t size);
   // Copy 'size' bytes memory from buffer+offset to 'dest'.
   // Reads block from disk if not in buffer.
