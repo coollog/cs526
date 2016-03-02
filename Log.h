@@ -30,7 +30,9 @@ class Log {
   typedef struct {
     BlockHeader header;
     Entry entries[MAX_ENTRY_COUNT];
-    char padding[BLOCK_SIZE - sizeof(BlockHeader) - MAX_ENTRY_COUNT * sizeof(Entry)];
+    // Pad Block to BLOCK_SIZE;
+    char padding[
+      BLOCK_SIZE - sizeof(BlockHeader) - MAX_ENTRY_COUNT * sizeof(Entry)];
   } __attribute__((packed)) Block;
 
   typedef struct {

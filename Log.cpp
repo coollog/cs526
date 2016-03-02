@@ -16,8 +16,6 @@ int Log::diskFd = -1;
 int Log::lastError = 0;
 
 bool Log::init(const char *devFile) {
-  printf("%lu, %lu, %lu\n", sizeof(BlockHeader), sizeof(Entry), sizeof(Block));
-
   DEV_FILE = devFile;
 
   blockBuffer.block = (Block *)aligned_alloc(0x1000, sizeof(Block));
