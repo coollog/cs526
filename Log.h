@@ -23,14 +23,15 @@ class Log {
   typedef struct {
     uint32_t generation;
     uint32_t entryCount;
-  } BlockHeader;
+  } __attribute__((packed)) BlockHeader;
   // Total number of entries allowed. Entries start at id 0.
   static const uint32_t MAX_ENTRY_COUNT = 204;
 
   typedef struct {
     BlockHeader header;
     Entry entries[MAX_ENTRY_COUNT];
-  } Block;
+    char padding[BLOCK_SIZE - sizeof(BlockHeader) - MAX_ENTRY_COUNT * sizeof(Entry)];
+  } __attribute__((packed)) Block;
 
   typedef struct {
     bool ready = false;
@@ -45,7 +46,7 @@ public:
     uint32_t generation = 0;
     uint32_t logSize = 100;
     uint32_t checkpointSize;
-  } Metadata;
+  } __attribute__((packed)) Metadata;
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
   static bool init(const char *devFile);
