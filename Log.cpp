@@ -16,8 +16,7 @@ int Log::diskFd = -1;
 int Log::lastError = 0;
 
 bool Log::init(const char *devFile) {
-  invariant(sizeof(BlockHeader) == 8);
-  invariant(sizeof(Block) == 4088);
+  printf("%u, %u, %u\n", sizeof(BlockHeader), sizeof(Entry), sizeof(Block));
 
   DEV_FILE = devFile;
 
