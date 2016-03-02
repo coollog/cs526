@@ -300,12 +300,12 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
   return true;
 }
 
-void Log::erase() {
+bool Log::erase() {
   CheckpointHeader header = { 0 };
-  writeCheckpointHeader(&header);
+  if (!writeCheckpointHeader(&header)) return false;
 
   metadata.generation = 0;
-  writeMetadata();
+  if (!writeMetadata()) return false;
 
   currentHead = 1;
   currentEntry = 0;

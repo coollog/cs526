@@ -16,7 +16,10 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  Log::erase();
+  if (!Log::erase()) {
+    printf("error: %d\n", Log.getErrno());
+    return 1;
+  }
   printf("successful erase\n");
 
   Log::Metadata md = Log::getMetadata();

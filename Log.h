@@ -66,7 +66,7 @@ public:
   static bool add(uint32_t opCode, uint64_t id1, uint64_t id2);
   static bool outOfSpace() { return currentHead >= metadata.size; }
   // Unlinks the entire log/checkpoint.
-  static void erase();
+  static bool erase();
   static bool finish();
 
   static int getErrno() { return lastError; }
