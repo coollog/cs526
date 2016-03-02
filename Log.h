@@ -48,7 +48,7 @@ public:
   // Holds the data in the superblock.
   typedef struct {
     uint32_t generation;
-    uint32_t size;
+    uint32_t size = 100;
   } Metadata;
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
@@ -66,7 +66,7 @@ public:
   static bool add(uint32_t opCode, uint64_t id1, uint64_t id2);
   static bool outOfSpace() { return currentHead >= metadata.size; }
   // Unlinks the entire log/checkpoint.
-  static void erase(uint32_t size);
+  static void erase();
   static bool finish();
 
   static int getErrno() { return lastError; }
@@ -82,10 +82,10 @@ private:
   static bool diskClose();
 
   // Garbage-collects the log, and resets it.
-  static bool reset(uint32_t size);
+  static bool reset();
 
   // Helper functions for reset().
-  static bool resetMetadata(uint32_t size);
+  static bool resetMetadata();
 
   // Seeking in the disk.
   static bool diskSeek(off_t offset); // Seek to position offset.
@@ -101,9 +101,9 @@ private:
   static off_t getEntryOffset(uint32_t entryId)
     { return sizeof(BlockHeader) + entryId * sizeof(Entry); }
   static bool isValidBlockId(uint32_t blockId)
-  { return blockId < metadata.size; }
+    { return blockId < metadata.size; }
   static bool isValidEntryId(uint32_t entryId)
-  { return entryId < MAX_ENTRY_COUNT; }
+    { return entryId < MAX_ENTRY_COUNT; }
 
   static bool bufferBlock(uint32_t blockId);
   static bool bufferBlockWriteBack();

@@ -250,16 +250,15 @@ bool Log::writeBlockEntry(uint32_t blockId,
   return bufferBlockWriteBack();
 }
 
-bool Log::reset(uint32_t size) {
+bool Log::reset() {
   if (!diskOpen()) return false;
 
-  if (!resetMetadata(size)) return false;
+  if (!resetMetadata()) return false;
 
   return true;
 }
 
-bool Log::resetMetadata(uint32_t size) {
-  metadata.size = size;
+bool Log::resetMetadata() {
   metadata.generation ++;
 
   return writeMetadata();
@@ -288,8 +287,6 @@ bool Log::readCheckpoint(void *buf) {
 bool Log::writeCheckpoint(const void *data, size_t size) {
   if (!diskOpen()) return false;
 
-  uint32_t blockCount = metadata.size;
-
   CheckpointHeader header = { size };
   if (!writeCheckpointHeader(&header)) return false;
 
@@ -298,16 +295,15 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
     return false;
 
   // Reset the entire log (aka garbage collect).
-  if (!reset(blockCount)) return false;
+  if (!reset()) return false;
 
   return true;
 }
 
-void Log::erase(uint32_t size) {
+void Log::erase() {
   CheckpointHeader header = { 0 };
   writeCheckpointHeader(&header);
 
-  metadata.size = size;
   metadata.generation = 0;
   writeMetadata();
 
