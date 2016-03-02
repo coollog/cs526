@@ -17,7 +17,7 @@ class Log {
     uint32_t opCode;
     uint64_t id1;
     uint64_t id2;
-  } Entry;
+  } __attribute__((packed)) Entry;
 
   // Holds the header of a block.
   typedef struct {
