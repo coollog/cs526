@@ -4,6 +4,14 @@
 
 const char *Log::DEV_FILE;
 
+bool Log::verbose = false;
+
+uint32_t Log::currentHead = 1;
+uint32_t Log::currentEntry = 0;
+
+int Log::diskFd = -1;
+int Log::lastError = 0;
+
 bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
@@ -158,7 +166,7 @@ bool Log::bufferBlockWriteBack() {
 
 bool Log::readMetadata() {
   if (!bufferBlock(0)) return false;
-  memcpy(metadata, blockBuffer.block, sizeof(Metadata));
+  memcpy(&metadata, &blockBuffer.block, sizeof(Metadata));
 }
 
 bool Log::moveToNextBlock() {
