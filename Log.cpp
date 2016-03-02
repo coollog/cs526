@@ -169,7 +169,7 @@ bool Log::bufferBlockWriteBack() {
   if (!blockBuffer.ready) return false;
 
   uint32_t blockId = blockBuffer.blockId;
-  if (!diskWrite(getBlockOffset(blockId), &blockBuffer.block, sizeof(Block)))
+  if (!diskWrite(getBlockOffset(blockId), blockBuffer.block, sizeof(Block)))
     return false;
 
   blockBuffer.dirty = false;
