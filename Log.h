@@ -88,28 +88,13 @@ private:
   static bool resetMetadata(uint32_t size);
 
   // Seeking in the disk.
-  static bool diskSeekCommon(off_t offset, int whence);
   static bool diskSeek(off_t offset); // Seek to position offset.
-  static bool diskSeekMore(off_t offset); // Seek to current position + offset.
 
-  /**
-   * Reading from the disk.
-   * 1) Seeks 'offset' with flag 'whence'.
-   * 2) Read 'size' bytes of disk to 'buf'.
-   */
-  static bool diskReadCommon(off_t offset, void *buf, size_t size, int whence);
+  // Seeks 'offset' and reads 'size' bytes of disk to 'buf'.
   static bool diskRead(off_t offset, void *buf, size_t size);
-  static bool diskReadMore(off_t getCheckpointOffset, void *buf, size_t size);
 
-  /**
-   * Writing to the disk.
-   * 1) Seeks 'offset' with flag 'whence'.
-   * 2) Write 'size' bytes of 'data' to disk.
-   */
-  static bool diskWriteCommon(
-    off_t offset, const void *data, size_t size, int whence);
+  // Seeks 'offset' and writes 'size' bytes of 'data' to disk.
   static bool diskWrite(off_t offset, const void *data, size_t size);
-  static bool diskWriteMore(off_t offset, const void *data, size_t size);
 
   // Helpers for the block/entry methods.
   static off_t getBlockOffset(uint32_t blockId) { return blockId * BLOCK_SIZE; }
@@ -122,8 +107,16 @@ private:
 
   static bool bufferBlock(uint32_t blockId);
   static bool bufferBlockWriteBack();
+  // Copy 'size' bytes memory from 'src' to the buffer+'offset'.
+  static void bufferBlockFromMem(
+    uint32_t blockId, const void *src, off_t offset, size_t size);
+  // Copy 'size' bytes memory from buffer+offset to 'dest'.
+  // Reads block from disk if not in buffer.
+  static bool bufferBlockToMem(
+    uint32_t blockId, void *dest, off_t offset, size_t size);
 
   static bool readMetadata();
+  static bool writeMetadata();
   static bool moveToNextBlock();
   static bool moveToNextEntry();
   static bool readBlockHeader(uint32_t blockId, BlockHeader *header);

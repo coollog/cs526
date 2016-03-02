@@ -11,9 +11,7 @@ using namespace std;
 #include "Log.h"
 
 int main(int argc, char *argv[]) {
-  Log diskLog;
-
-  diskLog.erase(100);
+  Log::erase(100);
   printf("successful erase\n");
 
   Log::Metadata md = diskLog.getMetadata();
