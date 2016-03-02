@@ -16,7 +16,7 @@ int Log::diskFd = -1;
 int Log::lastError = 0;
 
 bool Log::init(const char *devFile) {
-  printf("%u, %u, %u\n", sizeof(BlockHeader), sizeof(Entry), sizeof(Block));
+  printf("%lu, %lu, %lu\n", sizeof(BlockHeader), sizeof(Entry), sizeof(Block));
 
   DEV_FILE = devFile;
 
