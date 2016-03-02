@@ -29,6 +29,18 @@ class Log {
     size_t size; // How many bytes the graph takes up.
   } CheckpointHeader;
 
+  typedef struct {
+    Blockheader header;
+    Entry[MAX_ENTRY_COUNT] entries;
+  } Block;
+
+  typedef struct {
+    bool ready = false;
+    bool dirty = false;
+    uint32_t blockId;
+    Block block;
+  } BlockBuffer;
+
 public:
   // Holds the data in the superblock.
   typedef struct {
@@ -105,6 +117,9 @@ private:
   bool isValidBlockId(uint32_t blockId) { return blockId < metadata.size; }
   bool isValidEntryId(uint32_t entryId) { return entryId < MAX_ENTRY_COUNT; }
 
+  bool bufferBlock(uint32_t blockId);
+  bool bufferBlockWriteBack();
+
   bool readMetadata();
   bool moveToNextBlock();
   bool moveToNextEntry();
@@ -120,6 +135,7 @@ private:
   bool writeCheckpointHeader(const CheckpointHeader *header);
 
   Metadata metadata;
+  BlockBuffer blockBuffer;
 
   // The current block.
   uint32_t currentHead = 1;

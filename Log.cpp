@@ -52,7 +52,7 @@ bool Log::finish() {
 bool Log::diskOpen() {
   if (isOpen()) return true;
 
-  diskFd = open(DEV_FILE, O_RDWR | O_SYNC);
+  diskFd = open(DEV_FILE, O_RDWR | O_SYNC | O_DIRECT);
   if (diskFd == -1) {
     setErrno(errno);
     return false;
@@ -134,8 +134,31 @@ bool Log::diskWriteMore(off_t offset, const void *data, size_t size) {
   return diskWriteCommon(offset, data, size, SEEK_CUR);
 }
 
+bool Log::bufferBlock(uint32_t blockId) {
+  if (blockBuffer.blockId == blockId &&
+      blockBuffer.ready &&
+      !blockBuffer.dirty) return true;
+  if (!diskRead(getBlockOffset(blockId), &blockBuffer.block, sizeof(Block)))
+    return false;
+
+  blockBuffer.blockId = blockId;
+  blockBuffer.ready = true;
+
+  return true;
+}
+bool Log::bufferBlockWriteBack() {
+  uint32_t blockId = blockBuffer.blockId;
+  if (!diskWrite(getBlockOffset(blockId), &blockBuffer.block, sizeof(Block)))
+    return false;
+
+  blockBuffer.dirty = false;
+
+  return true;
+}
+
 bool Log::readMetadata() {
-  return diskRead(0, &metadata, sizeof(Metadata));
+  if (!bufferBlock(0)) return false;
+  memcpy(metadata, blockBuffer.block, sizeof(Metadata));
 }
 
 bool Log::moveToNextBlock() {
