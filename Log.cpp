@@ -55,7 +55,7 @@ bool Log::finish() {
 bool Log::diskOpen() {
   if (isOpen()) return true;
 
-  diskFd = open(devFile, O_RDWR | O_SYNC);
+  diskFd = open(DEV_FILE, O_RDWR | O_SYNC);
   if (diskFd == -1) {
     setErrno(errno);
     return false;
