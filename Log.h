@@ -37,7 +37,7 @@ public:
   } Metadata;
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
-  bool init();
+  bool init(const char *devFile);
   // Read in the checkpoint to a buffer.
   bool readCheckpoint(void *buf);
   // Write the graph to the checkpoint and reset the log.
