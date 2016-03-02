@@ -1,5 +1,3 @@
-#define _GNU_SOURCE
-
 #include <cstdint>
 #include <string.h>
 #include <sys/types.h>
@@ -142,7 +140,7 @@ private:
   static bool writeCheckpointHeader(const CheckpointHeader *header);
 
   static Metadata metadata;
-  static BlockBuffer blockBuffer __attribute((aligned(0x1000)));
+  static BlockBuffer blockBuffer __attribute__((aligned(0x1000)));
 
   // The current block.
   static uint32_t currentHead;

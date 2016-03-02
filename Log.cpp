@@ -4,6 +4,9 @@
 
 const char *Log::DEV_FILE;
 
+Metadata Log::metadata;
+BlockBuffer Log::blockBuffer __attribute__((aligned(0x1000)));
+
 bool Log::verbose = false;
 
 uint32_t Log::currentHead = 1;
