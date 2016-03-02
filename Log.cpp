@@ -4,8 +4,8 @@
 
 const char *Log::DEV_FILE;
 
-Metadata Log::metadata;
-BlockBuffer Log::blockBuffer __attribute__((aligned(0x1000)));
+Log::Metadata Log::metadata;
+Log::BlockBuffer Log::blockBuffer __attribute__((aligned(0x1000)));
 
 bool Log::verbose = false;
 
@@ -170,6 +170,7 @@ bool Log::bufferBlockWriteBack() {
 bool Log::readMetadata() {
   if (!bufferBlock(0)) return false;
   memcpy(&metadata, &blockBuffer.block, sizeof(Metadata));
+  return true;
 }
 
 bool Log::moveToNextBlock() {
