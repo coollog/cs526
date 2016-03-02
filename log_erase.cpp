@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
   }
 
   if (!Log::erase()) {
-    printf("error: %d\n", Log.getErrno());
+    printf("error: %d\n", Log::getErrno());
     return 1;
   }
   printf("successful erase\n");
