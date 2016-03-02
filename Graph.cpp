@@ -1,23 +1,23 @@
 #include "Graph.h"
 
-bool Graph::idExists(unsigned int id) {
+bool Graph::idExists(uint64_t id) {
   return nodes.find(id) != nodes.end();
 }
 
-bool Graph::idInSet(IdSet *idSet, unsigned int id) {
+bool Graph::idInSet(IdSet *idSet, uint64_t id) {
   return idSet->find(id) != idSet->end();
 }
 
-Graph::IdSet* Graph::neighborList(unsigned int id) {
+Graph::IdSet* Graph::neighborList(uint64_t id) {
   return &nodes.find(id)->second;
 }
 
-bool Graph::edgeExists(unsigned int id1, unsigned int id2) {
+bool Graph::edgeExists(uint64_t id1, uint64_t id2) {
   if (idInSet(neighborList(id1), id2)) return true;
   return false;
 }
 
-int Graph::addNode(unsigned int id) {
+int Graph::addNode(uint64_t id) {
   // Make sure id doesn't exist already.
   if (idExists(id)) return -1;
 
@@ -27,7 +27,7 @@ int Graph::addNode(unsigned int id) {
   return 0;
 }
 
-int Graph::addEdge(unsigned int id1, unsigned int id2) {
+int Graph::addEdge(uint64_t id1, uint64_t id2) {
   // Make sure id1 != id2.
   if (id1 == id2) return -2;
 
@@ -45,13 +45,13 @@ int Graph::addEdge(unsigned int id1, unsigned int id2) {
   return 0;
 }
 
-int Graph::removeNode(unsigned int id) {
+int Graph::removeNode(uint64_t id) {
   // Make sure node exists.
   if (!idExists(id)) return -2;
 
   // Remove all edges.
   IdSet *neighbors = neighborList(id);
-  for (unsigned int neighborId: *neighbors) {
+  for (uint64_t neighborId: *neighbors) {
     removeEdge(id, neighborId);
   }
 
@@ -61,7 +61,7 @@ int Graph::removeNode(unsigned int id) {
   return 0;
 }
 
-int Graph::removeEdge(unsigned int id1, unsigned int id2) {
+int Graph::removeEdge(uint64_t id1, uint64_t id2) {
   // Make sure both nodes exist.
   if (!idExists(id1) || !idExists(id2)) return -2;
 
@@ -79,11 +79,11 @@ int Graph::removeEdge(unsigned int id1, unsigned int id2) {
   return 0;
 }
 
-bool Graph::getNode(unsigned int id) {
+bool Graph::getNode(uint64_t id) {
   return idExists(id);
 }
 
-int Graph::getEdge(unsigned int id1, unsigned int id2) {
+int Graph::getEdge(uint64_t id1, uint64_t id2) {
   // Make sure both nodes exist.
   if (!idExists(id1) || !idExists(id2)) return -2;
 
@@ -91,7 +91,7 @@ int Graph::getEdge(unsigned int id1, unsigned int id2) {
   return edgeExists(id1, id2);
 }
 
-Graph::IdSet *Graph::getNeighbors(unsigned int id) {
+Graph::IdSet *Graph::getNeighbors(uint64_t id) {
   // Make sure id exists.
   if (!idExists(id)) return NULL;
 
@@ -99,18 +99,18 @@ Graph::IdSet *Graph::getNeighbors(unsigned int id) {
 }
 
 
-int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
+int Graph::shortestPath(uint64_t idSource, uint64_t idDest) {
   // Make sure both nodes exist.
   if (!idExists(idSource) || !idExists(idDest)) return -2;
 
-  typedef std::unordered_map<unsigned int, int> NodeMap;
+  typedef std::unordered_map<uint64_t, int> NodeMap;
 
   IdSet nodeQueue;
   NodeMap dist, prev;
 
   // Set up.
   for (const auto& node: nodes) {
-    unsigned int id = node.first;
+    uint64_t id = node.first;
 
     dist[id] = INT_MAX;
     prev[id] = -1;
@@ -125,7 +125,7 @@ int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
     int minDist = INT_MAX;
     int minDistId = -1;
 
-    for (unsigned int id: nodeQueue) {
+    for (uint64_t id: nodeQueue) {
       if (minDistId == -1 || dist[id] < minDist) {
         minDistId = id;
         minDist = dist[id];
@@ -140,7 +140,7 @@ int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
     nodeQueue.erase(minDistId);
 
     // Process the neighbors.
-    for (unsigned int id: *getNeighbors(minDistId)) {
+    for (uint64_t id: *getNeighbors(minDistId)) {
       int alt = dist[minDistId] + 1;
       if (alt < dist[id]) {
         dist[id] = alt;

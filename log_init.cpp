@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
   }
   printf("successful open\n");
 
-  if (!diskLog.reset(100, Log::RESET_VERBOSE)) {
+  if (!diskLog.reset(100)) {
     printf("error: %d\n", diskLog.getErrno());
     return 1;
   }

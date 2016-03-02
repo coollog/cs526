@@ -11,12 +11,12 @@ using namespace std;
 #include "Server.h"
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    printf("Usage: cs426_graph_server <port>\n");
+  if (argc != 3) {
+    printf("Usage: cs426_graph_server <port> <devfile>\n");
     return 1;
   }
 
-  Server::init(argv[1]);
+  Server::init(argv[1], argv[2]);
 
   Server::loop();
 

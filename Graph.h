@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <climits>
 #include <unordered_set>
 #include <unordered_map>
@@ -5,24 +6,24 @@
 
 class Graph {
 public:
-  typedef std::unordered_set<unsigned int> IdSet;
-  typedef std::unordered_map<unsigned int, IdSet> NodeList;
+  typedef std::unordered_set<uint64_t> IdSet;
+  typedef std::unordered_map<uint64_t, IdSet> NodeList;
 
-  int addNode(unsigned int id);
-  int addEdge(unsigned int id1, unsigned int id2);
-  int removeNode(unsigned int id);
-  int removeEdge(unsigned int id1, unsigned int id2);
-  bool getNode(unsigned int id);
-  int getEdge(unsigned int id1, unsigned int id2);
-  IdSet *getNeighbors(unsigned int id);
-  int shortestPath(unsigned int id1, unsigned int id2);
+  int addNode(uint64_t id);
+  int addEdge(uint64_t id1, uint64_t id2);
+  int removeNode(uint64_t id);
+  int removeEdge(uint64_t id1, uint64_t id2);
+  bool getNode(uint64_t id);
+  int getEdge(uint64_t id1, uint64_t id2);
+  IdSet *getNeighbors(uint64_t id);
+  int shortestPath(uint64_t id1, uint64_t id2);
   bool checkpoint();
 
 private:
-  bool idExists(unsigned int id);
-  bool idInSet(IdSet *idSet, unsigned int id);
-  IdSet *neighborList(unsigned int id);
-  bool edgeExists(unsigned int id1, unsigned int id2);
+  bool idExists(uint64_t id);
+  bool idInSet(IdSet *idSet, uint64_t id);
+  IdSet *neighborList(uint64_t id);
+  bool edgeExists(uint64_t id1, uint64_t id2);
 
   NodeList nodes;
 };
