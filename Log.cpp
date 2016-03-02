@@ -115,7 +115,6 @@ bool Log::diskReadCommon(off_t offset, void *buf, size_t size, int whence) {
   ssize_t readSize = read(diskFd, buf, size);
   if (readSize != (ssize_t)size) {
     setErrno(errno);
-    printf("AHHH\n");
     return false;
   }
 
@@ -153,7 +152,7 @@ bool Log::bufferBlock(uint32_t blockId) {
   if (blockBuffer.blockId == blockId &&
       blockBuffer.ready &&
       !blockBuffer.dirty) return true;
-  if (!diskRead(getBlockOffset(blockId), &blockBuffer.block, sizeof(Block)))
+  if (!diskRead(getBlockOffset(blockId), &blockBuffer.block, 0x1000))
     return false;
 
   blockBuffer.blockId = blockId;
