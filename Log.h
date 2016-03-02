@@ -30,8 +30,6 @@ class Log {
   } CheckpointHeader;
 
 public:
-  static void setDevFile(const char *fname);
-
   // Holds the data in the superblock.
   typedef struct {
     uint32_t size;

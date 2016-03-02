@@ -4,13 +4,10 @@
 
 const char *Log::DEV_FILE;
 
-void Log::setDevFile(const char *fname) {
+bool Log::init(const char *fname) {
   DEV_FILE = fname;
-}
 
-bool Log::init() {
-  if (!readMetadata()) return false;
-  return true;
+  return readMetadata();
 }
 bool Log::playback(Entry *entry) {
   if (outOfSpace()) return false;

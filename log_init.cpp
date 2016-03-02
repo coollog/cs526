@@ -13,7 +13,7 @@ using namespace std;
 int main(int argc, char *argv[]) {
   Log diskLog;
 
-  if (!diskLog.init()) {
+  if (!diskLog.init("/dev/sdc")) {
     printf("error: %d\n", diskLog.getErrno());
     return 1;
   }
