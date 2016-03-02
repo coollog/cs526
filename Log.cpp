@@ -309,4 +309,6 @@ bool Log::erase() {
 
   currentHead = 1;
   currentEntry = 0;
+
+  return true;
 }
