@@ -19,7 +19,6 @@ bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
   blockBuffer.block = (Block *)aligned_alloc(0x1000, sizeof(Block));
-  printf("%p\n", (void *)blockBuffer.block);
 
   return readMetadata();
 }
@@ -112,7 +111,6 @@ bool Log::diskReadCommon(off_t offset, void *buf, size_t size, int whence) {
   if (!diskOpen()) return false;
   if (!diskSeekCommon(offset, whence)) return false;
 
-  printf("%x, %p\n", (unsigned int)offset, (void *)buf);
   ssize_t readSize = read(diskFd, buf, size);
   if (readSize != (ssize_t)size) {
     setErrno(errno);
