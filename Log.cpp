@@ -5,7 +5,7 @@
 const char *Log::DEV_FILE;
 
 bool Log::init(const char *devFile) {
-  DEV_FILE = fname;
+  DEV_FILE = devFile;
 
   return readMetadata();
 }
