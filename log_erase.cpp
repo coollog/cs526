@@ -16,6 +16,10 @@ int main(int argc, char *argv[]) {
   diskLog.erase(100);
   printf("successful erase\n");
 
+  Log::Metadata md = diskLog.getMetadata();
+  printf("metadata generation: %u, size: %u\n",
+         md.generation, md.size);
+
   diskLog.finish();
 
   return 0;
