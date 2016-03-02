@@ -47,7 +47,7 @@ class Log {
 public:
   // Holds the data in the superblock.
   typedef struct {
-    uint32_t generation;
+    uint32_t generation = 0;
     uint32_t size = 100;
   } Metadata;
 
