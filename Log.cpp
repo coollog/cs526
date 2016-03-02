@@ -5,7 +5,7 @@
 const char *Log::DEV_FILE;
 
 Log::Metadata Log::metadata;
-Log::BlockBuffer Log::blockBuffer __attribute__((aligned(0x1000)));
+Log::BlockBuffer Log::blockBuffer;
 
 bool Log::verbose = false;
 
@@ -17,6 +17,8 @@ int Log::lastError = 0;
 
 bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
+
+  blockBuffer.block = aligned_alloc(0x1000, sizeof(Block));
 
   return readMetadata();
 }

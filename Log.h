@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdlib.h>
 
 class Log {
   static constexpr size_t BLOCK_SIZE = 0x1000;
@@ -40,7 +41,7 @@ class Log {
     bool ready = false;
     bool dirty = false;
     uint32_t blockId;
-    Block block;
+    Block *block;
   } BlockBuffer;
 
 public:
@@ -140,7 +141,7 @@ private:
   static bool writeCheckpointHeader(const CheckpointHeader *header);
 
   static Metadata metadata;
-  static BlockBuffer blockBuffer __attribute__((aligned(0x1000)));
+  static BlockBuffer blockBuffer;
 
   // The current block.
   static uint32_t currentHead;
