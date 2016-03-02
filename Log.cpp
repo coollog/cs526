@@ -19,6 +19,7 @@ bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
   blockBuffer.block = (Block *)aligned_alloc(0x1000, sizeof(Block));
+  System.out.println("%p\n", blockBuffer.block);
 
   return readMetadata();
 }
