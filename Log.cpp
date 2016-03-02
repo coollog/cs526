@@ -18,7 +18,7 @@ int Log::lastError = 0;
 bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
-  blockBuffer.block = aligned_alloc(0x1000, sizeof(Block));
+  blockBuffer.block = (Block *)aligned_alloc(0x1000, sizeof(Block));
 
   return readMetadata();
 }
