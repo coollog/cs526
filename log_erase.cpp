@@ -13,7 +13,7 @@ using namespace std;
 int main(int argc, char *argv[]) {
   Log diskLog;
 
-  diskLog.erase();
+  diskLog.erase(100);
   printf("successful erase\n");
 
   diskLog.finish();
