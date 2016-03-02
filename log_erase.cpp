@@ -13,11 +13,8 @@ using namespace std;
 int main(int argc, char *argv[]) {
   Log diskLog;
 
-  if (!diskLog.init()) {
-    printf("error: %d\n", diskLog.getErrno());
-    return 1;
-  }
-  printf("successful open\n");
+  diskLog.erase();
+  printf("successful erase\n");
 
   diskLog.finish();
 
