@@ -16,6 +16,9 @@ int Log::diskFd = -1;
 int Log::lastError = 0;
 
 bool Log::init(const char *devFile) {
+  invariant(sizeof(BlockHeader) == 8);
+  invariant(sizeof(Block) == 4088);
+
   DEV_FILE = devFile;
 
   blockBuffer.block = (Block *)aligned_alloc(0x1000, sizeof(Block));
@@ -119,7 +122,7 @@ bool Log::diskWrite(off_t offset, const void *data, size_t size) {
   if (!diskOpen()) return false;
   if (!diskSeek(offset)) return false;
 
-  ssize_t writeSize = write(diskFd, data, size);
+  ssize_t writeSize = write(diskFd , data, size);
   if (writeSize != (ssize_t)size) {
     setErrno(errno);
     return false;
