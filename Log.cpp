@@ -110,8 +110,9 @@ bool Log::diskSeek(off_t offset) {
 
 bool Log::diskReadCommon(off_t offset, void *buf, size_t size, int whence) {
   if (!diskOpen()) return false;
-  if (!diskSeek(offset)) return false;
+  if (!diskSeekCommon(offset, whence)) return false;
 
+  printf("%p, %p\n", (void *)offset, (void *)buf);
   ssize_t readSize = read(diskFd, buf, size);
   if (readSize != (ssize_t)size) {
     setErrno(errno);
