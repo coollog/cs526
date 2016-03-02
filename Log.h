@@ -4,7 +4,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include "utilities.h"
 
 class Log {
   static constexpr size_t BLOCK_SIZE = 0x1000;
@@ -120,6 +119,7 @@ private:
 
   off_t getCheckpointOffset() { return metadata.size * BLOCK_SIZE; }
   bool readCheckpointHeader(CheckpointHeader *header); // Caller owns pointer.
+  bool writeCheckpointHeader(const CheckpointHeader *header);
 
   Metadata metadata;
 

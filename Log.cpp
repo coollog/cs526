@@ -17,8 +17,8 @@ bool Log::playback(Entry *entry) {
     if (!moveToNextBlock()) return false;
   }
 
-  // Check entryCount.
-  if (header.entryCount == 0) return false;
+  BlockHeader header;
+  if (!readBlockHeader(currentHead, &header)) return false;
 
   if (!readBlockEntry(header, currentHead, currentEntry, entry)) {
     // If reached end of block, move to next block.
@@ -100,7 +100,7 @@ bool Log::diskReadCommon(off_t offset, void *buf, size_t size, int whence) {
   if (!diskSeek(offset)) return false;
 
   ssize_t readSize = read(diskFd, buf, size);
-  if (readSize != size) {
+  if (readSize != (ssize_t)size) {
     setErrno(errno);
     return false;
   }
@@ -122,7 +122,7 @@ bool Log::diskWriteCommon(off_t offset,
   if (!diskSeekCommon(offset, whence)) return false;
 
   ssize_t writeSize = write(diskFd, data, size);
-  if (writeSize != size) {
+  if (writeSize != (ssize_t)size) {
     setErrno(errno);
     return false;
   }
@@ -188,7 +188,7 @@ bool Log::readBlockEntry(const BlockHeader& header,
   // Make sure entryId is valid.
   if (entryId >= header.entryCount) return false;
 
-  return diskRead(offset + entryOffset, entry, sizeof(Entry))
+  return diskRead(offset + entryOffset, entry, sizeof(Entry));
 }
 
 bool Log::writeBlockEntry(uint32_t blockId,
@@ -200,7 +200,7 @@ bool Log::writeBlockEntry(uint32_t blockId,
   off_t offset = getBlockOffset(blockId);
   off_t entryOffset = getEntryOffset(entryId);
 
-  return diskWrite(offset + entryOffset, entry, sizeof(Entry))
+  return diskWrite(offset + entryOffset, entry, sizeof(Entry));
 }
 
 bool Log::reset(uint32_t size) {
@@ -224,8 +224,8 @@ bool Log::readCheckpointHeader(CheckpointHeader *header) {
   return diskRead(getCheckpointOffset(), header, sizeof(CheckpointHeader));
 }
 
-bool Log::writeCheckpointHeader(CheckpointHeader *header) {
-  return diskWrite(getCheckpointOffset(), &header, sizeof(CheckpointHeader));
+bool Log::writeCheckpointHeader(const CheckpointHeader *header) {
+  return diskWrite(getCheckpointOffset(), header, sizeof(CheckpointHeader));
 }
 
 bool Log::readCheckpoint(void *buf) {
@@ -248,7 +248,7 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
   if (!writeCheckpointHeader(&header)) return false;
 
   // Write checkpoint data.
-  if (!diskWriteMore(headerSize, data, size)) return false;
+  if (!diskWriteMore(sizeof(CheckpointHeader), data, size)) return false;
 
   // Reset the entire log (aka garbage collect).
   if (!reset(blockCount)) return false;
@@ -256,11 +256,11 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
   return true;
 }
 
-void Log::erase() {
+void Log::erase(uint32_t size) {
   CheckpointHeader header = { 0 };
   writeCheckpointHeader(&header);
 
-  metadata.size = 0;
+  metadata.size = size;
   metadata.generation = 0;
   diskWrite(0, &metadata, sizeof(Metadata));
 
