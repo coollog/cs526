@@ -11,19 +11,17 @@ using namespace std;
 #include "Log.h"
 
 int main(int argc, char *argv[]) {
-  Log diskLog;
-
-  if (!diskLog.init("/dev/sdc")) {
-    printf("error: %d\n", diskLog.getErrno());
+  if (!Log::init("/dev/sdc")) {
+    printf("error: %d\n", Log::getErrno());
     return 1;
   }
   printf("successful init\n");
 
-  Log::Metadata md = diskLog.getMetadata();
+  Log::Metadata md = Log::getMetadata();
   printf("metadata generation: %u, size: %u\n",
          md.generation, md.size);
 
-  diskLog.finish();
+  Log::finish();
 
   return 0;
 }

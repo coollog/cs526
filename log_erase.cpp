@@ -14,11 +14,11 @@ int main(int argc, char *argv[]) {
   Log::erase(100);
   printf("successful erase\n");
 
-  Log::Metadata md = diskLog.getMetadata();
+  Log::Metadata md = Log::getMetadata();
   printf("metadata generation: %u, size: %u\n",
          md.generation, md.size);
 
-  diskLog.finish();
+  Log::finish();
 
   return 0;
 }
