@@ -265,7 +265,7 @@ bool Log::resetMetadata() {
 }
 
 bool Log::readCheckpoint(void *buf) {
-  return diskRead(getCheckpointOffset(), buf, metadata.checkpointSize));
+  return diskRead(getCheckpointOffset(), buf, metadata.checkpointSize);
 }
 
 bool Log::writeCheckpoint(const void *data, size_t size) {
