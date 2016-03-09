@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include "utilities.h"
 #include "Log.h"
-#include <fcntl.h>
 
 const char *Log::DEV_FILE;
 
@@ -26,7 +23,7 @@ int Log::lastError = 0;
 bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
-  blockBuffer.block = (Block *)aligned_alloc(0x1000, sizeof(Block));
+  blockBuffer.block = aligned_alloc(0x1000, BLOCK_SIZE);
 
   return readMetadata();
 }
@@ -36,6 +33,7 @@ void Log::moveToStart() {
 }
 bool Log::playback(Entry *entry) {
   if (outOfSpace()) return false;
+  if (metadata.generation == 0) return false;
 
   if (currentHead == 0) {
     if (!moveToNextBlock()) return false; // Error instead?
@@ -58,153 +56,38 @@ bool Log::playback(Entry *entry) {
 bool Log::add(uint32_t opCode, uint64_t id1, uint64_t id2) {
   if (outOfSpace()) return false;
 
+  // If our current generation is 0, we need to initialize it to 1.
+  if (metadata.generation == 0) {
+    metadata.generation = 1;
+    if (!writeMetadata()) return false;
+  }
+
   Entry entry = { opCode, id1, id2 };
 
   // Write entry to current space.
-  if (!writeBlockEntry(currentHead, currentEntry, &entry)) return false;
+  if (!writeBlockEntry(currentHead, currentEntry, entry)) return false;
 
   // Update the block header.
   BlockHeader header = { metadata.generation, currentEntry + 1 };
-  if (!writeBlockHeader(currentHead, &header)) return false;
+  if (!writeBlockHeader(currentHead, header)) return false;
 
   return moveToNextEntry();
 }
 bool Log::finish() {
   if (!isOpen()) return true;
+
+  bufferBlockWriteBack();
+
   return diskClose();
 }
 
-bool Log::diskOpen() {
-  if (isOpen()) return true;
-
-#ifdef O_DIRECT
-  diskFd = open(DEV_FILE, O_RDWR | O_SYNC | O_DIRECT);
-#else
-  diskFd = open(DEV_FILE, O_RDWR | O_SYNC);
-  fcntl(diskFd, F_NOCACHE, 1);
-#endif
-
-  if (diskFd == -1) {
-    setErrno(errno);
-    return false;
-  }
-
-  return true;
-}
-bool Log::isOpen() {
-  if (diskFd == -1) {
-    setErrno(-2);
-    return false;
-  }
-
-  int fdOpen = fcntl(diskFd, F_GETFD);
-  if (fdOpen == -1 && errno == EBADF) {
-    setErrno(errno);
-    return false;
-  }
-
-  return true;
-}
-bool Log::diskClose() {
-  diskFd = -1;
-  return close(diskFd) != -1;
-}
-
-bool Log::diskSeek(off_t offset) {
-  off_t off = lseek(diskFd, offset, SEEK_SET);
-
-  if (off == -1) {
-    setErrno(errno);
-    return false;
-  }
-  return true;
-}
-
-bool Log::diskRead(off_t offset, void *buf, size_t size) {
-  if (!diskOpen()) return false;
-  if (!diskSeek(offset)) return false;
-
-  ssize_t readSize = read(diskFd, buf, size);
-  if (readSize != (ssize_t)size) {
-    setErrno(errno);
-    return false;
-  }
-
-  return true;
-}
-
-bool Log::diskWrite(off_t offset, const void *data, size_t size) {
-  if (!diskOpen()) return false;
-  if (!diskSeek(offset)) return false;
-
-  ssize_t writeSize = write(diskFd , data, size);
-  if (writeSize != (ssize_t)size) {
-    setErrno(errno);
-    return false;
-  }
-  return true;
-}
-
-bool Log::bufferBlock(uint32_t blockId) {
-  if (!isValidBlockId(blockId)) return false;
-
-  if (blockBuffer.blockId == blockId &&
-      blockBuffer.ready &&
-      !blockBuffer.dirty) return true;
-  if (!diskRead(getBlockOffset(blockId), blockBuffer.block, BLOCK_SIZE))
-    return false;
-
-  blockBuffer.blockId = blockId;
-  blockBuffer.ready = true;
-
-  return true;
-}
-bool Log::bufferBlockFromMem(uint32_t blockId,
-                             const void *src,
-                             off_t offset,
-                             size_t size) {
-  if (!isValidBlockId(blockId)) return false;
-
-  memcpy(blockBuffer.block + offset, src, size);
-
-  blockBuffer.blockId = blockId;
-  blockBuffer.ready = true;
-  blockBuffer.dirty = true;
-
-  return true;
-}
-bool Log::bufferBlockToMem(uint32_t blockId,
-                           void *dest,
-                           off_t offset,
-                           size_t size) {
-  if (!isValidBlockId(blockId)) return false;
-
-  if (!bufferBlock(blockId)) return false;
-  memcpy(dest, blockBuffer.block + offset, size);
-  return true;
-}
-bool Log::bufferBlockWriteBack() {
-  if (!blockBuffer.ready) return false;
-
-  uint32_t blockId = blockBuffer.blockId;
-  if (!diskWrite(getBlockOffset(blockId), blockBuffer.block, BLOCK_SIZE))
-    return false;
-
-  blockBuffer.dirty = false;
-  blockBuffer.ready = true;
-
-  return true;
-}
-
 bool Log::readMetadata() {
-  return bufferBlockToMem(0, &metadata, 0, sizeof(Metadata));
+  return bufferBlockToMem(0, &metadata, sizeof(Metadata));
 }
 bool Log::writeMetadata() {
-  if (!bufferBlockFromMem(0, &metadata, 0, sizeof(Metadata))) return false;
+  if (!bufferBlockFromMem(0, &metadata, sizeof(Metadata))) return false;
 
-  if (!bufferBlockWriteBack()) return false;
-
-  return true;
+  return bufferBlockWriteBack();
 }
 
 bool Log::moveToNextBlock() {
@@ -217,10 +100,10 @@ bool Log::moveToNextBlock() {
   if (!readBlockHeader(currentHead, &header)) return false;
 
   // Check generation. Update the header if generation is out of date.
-  if (metadata.generation > header.generation) {
+  if (metadata.generation != header.generation) {
     header.generation = metadata.generation;
     header.entryCount = 0;
-    if (!writeBlockHeader(currentHead, &header)) return false;
+    if (!writeBlockHeader(currentHead, header)) return false;
   }
 
   return true;
@@ -235,12 +118,11 @@ bool Log::moveToNextEntry() {
 }
 
 bool Log::readBlockHeader(uint32_t blockId, BlockHeader *header) {
-  return bufferBlockToMem(blockId, header, 0, sizeof(BlockHeader));
+  return bufferBlockReadHeader(blockId, header);
 }
 
-bool Log::writeBlockHeader(uint32_t blockId, const BlockHeader *header) {
-  if (!bufferBlockFromMem(blockId, header, 0, sizeof(BlockHeader)))
-    return false;
+bool Log::writeBlockHeader(uint32_t blockId, const BlockHeader& header) {
+  if (!bufferBlockWriteHeader(blockId, header)) return false;
 
   return bufferBlockWriteBack();
 }
@@ -252,18 +134,13 @@ bool Log::readBlockEntry(const BlockHeader& header,
   // Make sure entryId is valid.
   if (entryId >= header.entryCount) return false;
 
-  return bufferBlockToMem(
-    blockId, entry, getEntryOffset(entryId), sizeof(Entry));
+  return bufferBlockReadEntry(blockId, entryId, entry);
 }
 
 bool Log::writeBlockEntry(uint32_t blockId,
                           uint32_t entryId,
-                          const Entry *entry) {
-  // Make sure the block is not full.
-  if (!isValidEntryId(entryId)) return false;
-
-  if (!bufferBlockFromMem(
-    blockId, entry, getEntryOffset(entryId), sizeof(Entry))) return false;
+                          const Entry& entry) {
+  if (!bufferBlockWriteEntry(blockId, entryId, entry)) return false;
 
   return bufferBlockWriteBack();
 }

@@ -2,10 +2,11 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <fcntl.h>
 
 class Log {
   static constexpr size_t BLOCK_SIZE = 0x1000;
@@ -47,7 +48,7 @@ public:
     bool ready = false;
     bool dirty = false;
     uint32_t blockId;
-    Block *block;
+    void *block;
   } BlockBuffer;
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
@@ -107,28 +108,40 @@ private:
     { return entryId < MAX_ENTRY_COUNT; }
 
   static bool bufferBlock(uint32_t blockId);
+  static Block *bufferBlockAsBlock() { return (Block *)blockBuffer.block; }
   static bool bufferBlockWriteBack();
-  // Copy 'size' bytes memory from 'src' to the buffer+'offset'.
-  static bool bufferBlockFromMem(
-    uint32_t blockId, const void *src, off_t offset, size_t size);
-  // Copy 'size' bytes memory from buffer+offset to 'dest'.
+  static bool bufferBlockReadEntry(uint32_t blockId,
+                                   uint32_t entryId,
+                                   Entry *entry);
+  static bool bufferBlockWriteEntry(uint32_t blockId,
+                                    uint32_t entryId,
+                                    const Entry& entry);
+  static bool bufferBlockReadHeader(uint32_t blockId, BlockHeader *header);
+  static bool bufferBlockWriteHeader(uint32_t blockId,
+                                     const BlockHeader& header);
+  // Copy 'size' bytes memory from 'src' to the buffer.
+  static bool bufferBlockFromMem(uint32_t blockId,
+                                 const void *src,
+                                 size_t size);
+  // Copy 'size' bytes memory from buffer to 'dest'.
   // Reads block from disk if not in buffer.
-  static bool bufferBlockToMem(
-    uint32_t blockId, void *dest, off_t offset, size_t size);
+  static bool bufferBlockToMem(uint32_t blockId, void *dest, size_t size);
 
   static bool readMetadata();
   static bool writeMetadata();
   static bool moveToNextBlock();
   static bool moveToNextEntry();
   static bool readBlockHeader(uint32_t blockId, BlockHeader *header);
-  static bool writeBlockHeader(uint32_t blockId, const BlockHeader *header);
+  static bool writeBlockHeader(uint32_t blockId, const BlockHeader& header);
   static bool readBlockEntry(const BlockHeader& header,
                              uint32_t blockId,
                              uint32_t entryId,
                              Entry *entry);
   // Writes to the next empty entry in blockId.
-  static bool writeBlockEntry(
-    uint32_t blockId, uint32_t entryId, const Entry *entry);
+  static bool writeBlockEntry(uint32_t blockId,
+                              uint32_t entryId,
+                              const Entry& entry);
+
 
   static off_t getCheckpointOffset() { return metadata.logSize * BLOCK_SIZE; }
 
