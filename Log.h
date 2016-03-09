@@ -11,7 +11,7 @@
 class Log {
   static constexpr size_t BLOCK_SIZE = 0x1000;
   static constexpr char EMPTY_BLOCK[BLOCK_SIZE] = {0};
-  static bool verbose;
+  static const bool VERBOSE = false;
 
   // Holds the header of a block.
   typedef struct {
@@ -44,13 +44,6 @@ public:
       BLOCK_SIZE - sizeof(BlockHeader) - MAX_ENTRY_COUNT * sizeof(Entry)];
   } __attribute__((packed)) Block;
 
-  typedef struct {
-    bool ready = false;
-    bool dirty = false;
-    uint32_t blockId;
-    void *block;
-  } BlockBuffer;
-
   // Opens the disk, reads the metadata, and sets of internal states of the log.
   static bool init(const char *devFile);
   // Read in the checkpoint to a buffer.
@@ -79,24 +72,27 @@ private:
 
   static void setErrno(int en) { lastError = en; }
 
-  static bool diskOpen();
-  static bool isOpen();
-  static bool diskClose();
-
   // Garbage-collects the log, and resets it.
   static bool reset();
 
   // Helper functions for reset().
   static bool resetMetadata();
 
-  // Seeking in the disk.
-  static bool diskSeek(off_t offset); // Seek to position offset.
+  class Disk {
+  public:
+    static bool diskClose();
 
-  // Seeks 'offset' and reads 'size' bytes of disk to 'buf'.
-  static bool diskRead(off_t offset, void *buf, size_t size);
+    // Seeks 'offset' and reads 'size' bytes of disk to 'buf'.
+    static bool diskRead(off_t offset, void *buf, size_t size);
 
-  // Seeks 'offset' and writes 'size' bytes of 'data' to disk.
-  static bool diskWrite(off_t offset, const void *data, size_t size);
+    // Seeks 'offset' and writes 'size' bytes of 'data' to disk.
+    static bool diskWrite(off_t offset, const void *data, size_t size);
+  private:
+    static bool isOpen(); // Is the disk open?
+    static bool diskOpen(); // Open the disk.
+
+    static bool diskSeek(off_t offset); // Seek to position offset.
+  };
 
   // Helpers for the block/entry methods.
   static off_t getBlockOffset(uint32_t blockId) { return blockId * BLOCK_SIZE; }
@@ -107,25 +103,32 @@ private:
   static bool isValidEntryId(uint32_t entryId)
     { return entryId < MAX_ENTRY_COUNT; }
 
-  static bool bufferBlock(uint32_t blockId);
-  static Block *bufferBlockAsBlock() { return (Block *)blockBuffer.block; }
-  static bool bufferBlockWriteBack();
-  static bool bufferBlockReadEntry(uint32_t blockId,
-                                   uint32_t entryId,
-                                   Entry *entry);
-  static bool bufferBlockWriteEntry(uint32_t blockId,
-                                    uint32_t entryId,
-                                    const Entry& entry);
-  static bool bufferBlockReadHeader(uint32_t blockId, BlockHeader *header);
-  static bool bufferBlockWriteHeader(uint32_t blockId,
-                                     const BlockHeader& header);
-  // Copy 'size' bytes memory from 'src' to the buffer.
-  static bool bufferBlockFromMem(uint32_t blockId,
-                                 const void *src,
-                                 size_t size);
-  // Copy 'size' bytes memory from buffer to 'dest'.
-  // Reads block from disk if not in buffer.
-  static bool bufferBlockToMem(uint32_t blockId, void *dest, size_t size);
+  class BlockBuffer {
+  public:
+    static void init();
+
+    static bool writeBack();
+    static bool readEntry(uint32_t blockId, uint32_t entryId, Entry *entry);
+    static bool writeEntry(uint32_t blockId,
+                           uint32_t entryId,
+                           const Entry& entry);
+    static bool readHeader(uint32_t blockId, BlockHeader *header);
+    static bool writeHeader(uint32_t blockId, const BlockHeader& header);
+    // Copy 'size' bytes memory from 'src' to the buffer.
+    static bool fromMem(uint32_t blockId, const void *src, size_t size);
+    // Copy 'size' bytes memory from buffer to 'dest'.
+    // Reads block from disk if not in buffer.
+    static bool toMem(uint32_t blockId, void *dest, size_t size);
+  private:
+    static Block *asBlock() { return (Block *)block; }
+
+    static bool prepareBlock(uint32_t blockId);
+
+    static bool ready;
+    static bool dirty;
+    static uint32_t id;
+    static void *block;
+  };
 
   static bool readMetadata();
   static bool writeMetadata();
@@ -146,7 +149,6 @@ private:
   static off_t getCheckpointOffset() { return metadata.logSize * BLOCK_SIZE; }
 
   static Metadata metadata;
-  static BlockBuffer blockBuffer;
 
   // The current block.
   static uint32_t currentHead;

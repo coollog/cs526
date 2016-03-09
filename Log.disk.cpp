@@ -1,6 +1,6 @@
 #include "Log.h"
 
-bool Log::diskOpen() {
+bool Log::Disk::diskOpen() {
   if (isOpen()) return true;
 
 #ifdef O_DIRECT
@@ -17,7 +17,7 @@ bool Log::diskOpen() {
 
   return true;
 }
-bool Log::isOpen() {
+bool Log::Disk::isOpen() {
   if (diskFd == -1) {
     setErrno(-2);
     return false;
@@ -31,12 +31,12 @@ bool Log::isOpen() {
 
   return true;
 }
-bool Log::diskClose() {
+bool Log::Disk::diskClose() {
   diskFd = -1;
   return close(diskFd) != -1;
 }
 
-bool Log::diskSeek(off_t offset) {
+bool Log::Disk::diskSeek(off_t offset) {
   off_t off = lseek(diskFd, offset, SEEK_SET);
 
   if (off == -1) {
@@ -46,7 +46,7 @@ bool Log::diskSeek(off_t offset) {
   return true;
 }
 
-bool Log::diskRead(off_t offset, void *buf, size_t size) {
+bool Log::Disk::diskRead(off_t offset, void *buf, size_t size) {
   if (!diskOpen()) return false;
   if (!diskSeek(offset)) return false;
 
@@ -59,7 +59,7 @@ bool Log::diskRead(off_t offset, void *buf, size_t size) {
   return true;
 }
 
-bool Log::diskWrite(off_t offset, const void *data, size_t size) {
+bool Log::Disk::diskWrite(off_t offset, const void *data, size_t size) {
   if (!diskOpen()) return false;
   if (!diskSeek(offset)) return false;
 

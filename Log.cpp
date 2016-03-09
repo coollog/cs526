@@ -3,9 +3,6 @@
 const char *Log::DEV_FILE;
 
 Log::Metadata Log::metadata;
-Log::BlockBuffer Log::blockBuffer;
-
-bool Log::verbose = false;
 
 uint32_t Log::currentHead = 1;
 uint32_t Log::currentEntry = 0;
@@ -13,17 +10,10 @@ uint32_t Log::currentEntry = 0;
 int Log::diskFd = -1;
 int Log::lastError = 0;
 
-// This is for OS X.
-#ifndef aligned_alloc
-  void *aligned_alloc(int align, size_t size) {
-    return malloc(size);
-  }
-#endif
-
 bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
-  blockBuffer.block = aligned_alloc(0x1000, BLOCK_SIZE);
+  BlockBuffer::init();
 
   return readMetadata();
 }
@@ -45,7 +35,9 @@ bool Log::playback(Entry *entry) {
   if (!readBlockEntry(header, currentHead, currentEntry, entry)) {
     // If reached end of block, move to next block.
     if (!isValidEntryId(currentEntry)) {
+      if (VERBOSE) printf("\treached end of block\n");
       if (!moveToNextBlock()) return false; // Error instead?
+      if (VERBOSE) printf("\tcurrent block: %u\n", currentHead);
       return playback(entry);
     }
     return false; // Error instead?
@@ -74,20 +66,18 @@ bool Log::add(uint32_t opCode, uint64_t id1, uint64_t id2) {
   return moveToNextEntry();
 }
 bool Log::finish() {
-  if (!isOpen()) return true;
+  BlockBuffer::writeBack();
 
-  bufferBlockWriteBack();
-
-  return diskClose();
+  return Disk::diskClose();
 }
 
 bool Log::readMetadata() {
-  return bufferBlockToMem(0, &metadata, sizeof(Metadata));
+  return BlockBuffer::toMem(0, &metadata, sizeof(Metadata));
 }
 bool Log::writeMetadata() {
-  if (!bufferBlockFromMem(0, &metadata, sizeof(Metadata))) return false;
+  if (!BlockBuffer::fromMem(0, &metadata, sizeof(Metadata))) return false;
 
-  return bufferBlockWriteBack();
+  return BlockBuffer::writeBack();
 }
 
 bool Log::moveToNextBlock() {
@@ -106,6 +96,9 @@ bool Log::moveToNextBlock() {
     if (!writeBlockHeader(currentHead, header)) return false;
   }
 
+  if (VERBOSE) printf(
+    "\tmove to next block: block %u, entry %u\n", currentHead, currentEntry);
+
   return true;
 }
 
@@ -114,19 +107,19 @@ bool Log::moveToNextEntry() {
   if (!isValidEntryId(currentEntry)) {
     return moveToNextBlock();
   }
+  if (VERBOSE) printf(
+    "\tmove to next entry: block %u, entry %u\n", currentHead, currentEntry);
   return true;
 }
 
 bool Log::readBlockHeader(uint32_t blockId, BlockHeader *header) {
-  return bufferBlockReadHeader(blockId, header);
+  return BlockBuffer::readHeader(blockId, header);
 }
-
 bool Log::writeBlockHeader(uint32_t blockId, const BlockHeader& header) {
-  if (!bufferBlockWriteHeader(blockId, header)) return false;
+  if (!BlockBuffer::writeHeader(blockId, header)) return false;
 
-  return bufferBlockWriteBack();
+  return BlockBuffer::writeBack();
 }
-
 bool Log::readBlockEntry(const BlockHeader& header,
                          uint32_t blockId,
                          uint32_t entryId,
@@ -134,20 +127,17 @@ bool Log::readBlockEntry(const BlockHeader& header,
   // Make sure entryId is valid.
   if (entryId >= header.entryCount) return false;
 
-  return bufferBlockReadEntry(blockId, entryId, entry);
+  return BlockBuffer::readEntry(blockId, entryId, entry);
 }
-
 bool Log::writeBlockEntry(uint32_t blockId,
                           uint32_t entryId,
                           const Entry& entry) {
-  if (!bufferBlockWriteEntry(blockId, entryId, entry)) return false;
+  if (!BlockBuffer::writeEntry(blockId, entryId, entry)) return false;
 
-  return bufferBlockWriteBack();
+  return BlockBuffer::writeBack();
 }
 
 bool Log::reset() {
-  if (!diskOpen()) return false;
-
   if (!resetMetadata()) return false;
 
   return true;
@@ -160,7 +150,7 @@ bool Log::resetMetadata() {
 }
 
 bool Log::readCheckpoint(void *buf) {
-  return diskRead(getCheckpointOffset(), buf, metadata.checkpointSize);
+  return Disk::diskRead(getCheckpointOffset(), buf, metadata.checkpointSize);
 }
 
 bool Log::writeCheckpoint(const void *data, size_t size) {
@@ -168,7 +158,7 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
   if (!writeMetadata()) return false;
 
   // Write checkpoint data.
-  if (!diskWrite(getCheckpointOffset(), data, size)) return false;
+  if (!Disk::diskWrite(getCheckpointOffset(), data, size)) return false;
 
   // Reset the entire log (aka garbage collect).
   if (!reset()) return false;

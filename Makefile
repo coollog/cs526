@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS  = -g -Wall -std=c++11 -pedantic -Wno-deprecated-register
 MONGOOSE = mongoose.c
-LOG = Log.cpp Log.disk.cpp Log.bufferBlock.cpp
+LOG = Log.cpp Log.Disk.cpp Log.BlockBuffer.cpp
 
 all: cs426_graph_server cs426_graph_client log_test log_init log_erase
 
