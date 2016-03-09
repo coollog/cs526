@@ -11,7 +11,7 @@ using namespace std;
 #include "Log.h"
 
 int main(int argc, char *argv[]) {
-  if (!Log::init("/dev/sdc")) {
+  if (!Log::init(argv[1])) {
     printf("error: %d\n", Log::getErrno());
     return 1;
   }

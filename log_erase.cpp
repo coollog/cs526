@@ -11,13 +11,13 @@ using namespace std;
 #include "Log.h"
 
 int main(int argc, char *argv[]) {
-  if (!Log::init("/dev/sdc")) {
-    printf("error: %d\n", Log::getErrno());
+  if (!Log::init(argv[1])) {
+    printf("init error: %d\n", Log::getErrno());
     return 1;
   }
 
   if (!Log::erase()) {
-    printf("error: %d\n", Log::getErrno());
+    printf("erase error: %d\n", Log::getErrno());
     return 1;
   }
   printf("successful erase\n");

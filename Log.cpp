@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "utilities.h"
 #include "Log.h"
+#include <fcntl.h>
 
 const char *Log::DEV_FILE;
 
@@ -15,6 +16,13 @@ uint32_t Log::currentEntry = 0;
 int Log::diskFd = -1;
 int Log::lastError = 0;
 
+// This is for OS X.
+#ifndef aligned_alloc
+  void *aligned_alloc(int align, size_t size) {
+    return malloc(size);
+  }
+#endif
+
 bool Log::init(const char *devFile) {
   DEV_FILE = devFile;
 
@@ -22,23 +30,27 @@ bool Log::init(const char *devFile) {
 
   return readMetadata();
 }
+void Log::moveToStart() {
+  currentHead = 1;
+  currentEntry = 0;
+}
 bool Log::playback(Entry *entry) {
   if (outOfSpace()) return false;
 
   if (currentHead == 0) {
-    if (!moveToNextBlock()) return false;
+    if (!moveToNextBlock()) return false; // Error instead?
   }
 
   BlockHeader header;
-  if (!readBlockHeader(currentHead, &header)) return false;
+  if (!readBlockHeader(currentHead, &header)) return false; // Error instead?
 
   if (!readBlockEntry(header, currentHead, currentEntry, entry)) {
     // If reached end of block, move to next block.
     if (!isValidEntryId(currentEntry)) {
-      if (!moveToNextBlock()) return false;
+      if (!moveToNextBlock()) return false; // Error instead?
       return playback(entry);
     }
-    return false;
+    return false; // Error instead?
   }
 
   return moveToNextEntry();
@@ -65,7 +77,13 @@ bool Log::finish() {
 bool Log::diskOpen() {
   if (isOpen()) return true;
 
+#ifdef O_DIRECT
   diskFd = open(DEV_FILE, O_RDWR | O_SYNC | O_DIRECT);
+#else
+  diskFd = open(DEV_FILE, O_RDWR | O_SYNC);
+  fcntl(diskFd, F_NOCACHE, 1);
+#endif
+
   if (diskFd == -1) {
     setErrno(errno);
     return false;
@@ -162,7 +180,7 @@ bool Log::bufferBlockToMem(uint32_t blockId,
   if (!isValidBlockId(blockId)) return false;
 
   if (!bufferBlock(blockId)) return false;
-  memcpy(dest, blockBuffer.block + offset, sizeof(Metadata));
+  memcpy(dest, blockBuffer.block + offset, size);
   return true;
 }
 bool Log::bufferBlockWriteBack() {
@@ -282,8 +300,8 @@ bool Log::writeCheckpoint(const void *data, size_t size) {
 }
 
 bool Log::erase() {
-  metadata.generation = 0;
-  metadata.checkpointSize = 0;
+  Metadata metadataReset;
+  metadata = metadataReset;
   if (!writeMetadata()) return false;
 
   currentHead = 1;

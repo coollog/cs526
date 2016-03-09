@@ -12,13 +12,6 @@ class Log {
   static constexpr char EMPTY_BLOCK[BLOCK_SIZE] = {0};
   static bool verbose;
 
-  // Holds each entry in a block.
-  typedef struct {
-    uint32_t opCode;
-    uint64_t id1;
-    uint64_t id2;
-  } __attribute__((packed)) Entry;
-
   // Holds the header of a block.
   typedef struct {
     uint32_t generation;
@@ -26,6 +19,21 @@ class Log {
   } __attribute__((packed)) BlockHeader;
   // Total number of entries allowed. Entries start at id 0.
   static const uint32_t MAX_ENTRY_COUNT = 204;
+
+public:
+  // Holds the data in the superblock.
+  typedef struct {
+    uint32_t generation = 0;
+    uint32_t logSize = 100;
+    uint32_t checkpointSize = 0;
+  } __attribute__((packed)) Metadata;
+
+  // Holds each entry in a block.
+  typedef struct {
+    uint32_t opCode;
+    uint64_t id1;
+    uint64_t id2;
+  } __attribute__((packed)) Entry;
 
   typedef struct {
     BlockHeader header;
@@ -42,20 +50,14 @@ class Log {
     Block *block;
   } BlockBuffer;
 
-public:
-  // Holds the data in the superblock.
-  typedef struct {
-    uint32_t generation = 0;
-    uint32_t logSize = 100;
-    uint32_t checkpointSize;
-  } __attribute__((packed)) Metadata;
-
   // Opens the disk, reads the metadata, and sets of internal states of the log.
   static bool init(const char *devFile);
   // Read in the checkpoint to a buffer.
   static bool readCheckpoint(void *buf);
   // Write the graph to the checkpoint and reset the log.
   static bool writeCheckpoint(const void *data, size_t size);
+  // Move back to the start of the log.
+  static void moveToStart();
   // Play back the log for the current generation (from the head).
   // This plays back one entry of the log, and returns true if there are more
   // entries to play back.
@@ -138,6 +140,6 @@ private:
   // The current entry in the current block.
   static uint32_t currentEntry;
 
-  static int diskFd ;
+  static int diskFd;
   static int lastError;
 };
