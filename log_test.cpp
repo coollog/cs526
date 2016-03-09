@@ -30,6 +30,24 @@ void printMetadata(const Log::Metadata& md) {
          md.generation, md.logSize, md.checkpointSize);
 }
 
+void printCheckpoint() {
+  char data[0x1000];
+  if (!Log::readCheckpoint(data)) {
+    printf("checkpoint read error: %d\n", Log::getErrno());
+    exit(1);
+  }
+  printf("checkpoint read as: '%s'\n", data);
+}
+void checkpoint() {
+  const char *data = "This is the checkpoint data.";
+
+  if (!Log::writeCheckpoint(data, strlen(data) + 1)) {
+    printf("checkpoint error: %d\n", Log::getErrno());
+    exit(1);
+  }
+  printf("successful checkpoint\n");
+}
+
 void playback() {
   Log::moveToStart();
 
@@ -53,6 +71,8 @@ int main(int argc, char *argv[]) {
 
   printMetadata(Log::getMetadata());
 
+  printCheckpoint();
+
   playback();
 
   if (argc > 2) {
@@ -60,6 +80,9 @@ int main(int argc, char *argv[]) {
       add(1, 1234, 4321);
 
       playback();
+    }
+    if (!strcmp(argv[2], "checkpoint")) {
+      checkpoint();
     }
   }
 
