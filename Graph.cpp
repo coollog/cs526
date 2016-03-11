@@ -24,7 +24,7 @@ int Graph::addNode(uint64_t id) {
   // Add the node to graph.
   nodes[id] = IdSet();
 
-  printf("Graph: added node '%llu'\n", id);
+  printf("Graph: added node '%lu'\n", id);
 
   return 0;
 }
@@ -44,7 +44,7 @@ int Graph::addEdge(uint64_t id1, uint64_t id2) {
   neighborList(id1)->insert(id2);
   neighborList(id2)->insert(id1);
 
-  printf("Graph: added edge '%llu' to '%llu'\n", id1, id2);
+  printf("Graph: added edge '%lu' to '%lu'\n", id1, id2);
 
   return 0;
 }
@@ -62,7 +62,7 @@ int Graph::removeNode(uint64_t id) {
   // Remove node.
   nodes.erase(id);
 
-  printf("Graph: removed node '%llu'\n", id);
+  printf("Graph: removed node '%lu'\n", id);
 
   return 0;
 }
@@ -82,7 +82,7 @@ int Graph::removeEdge(uint64_t id1, uint64_t id2) {
   neighbors1->erase(id2);
   neighbors2->erase(id1);
 
-  printf("Graph: removed edge '%llu' to '%llu'\n", id1, id2);
+  printf("Graph: removed edge '%lu' to '%lu'\n", id1, id2);
 
   return 0;
 }
@@ -244,9 +244,9 @@ void Graph::print() {
     uint64_t id = node.first;
     IdSet values = node.second;
 
-    printf("%llu: ", id);
+    printf("%lu: ", id);
     for (const auto& value: values) {
-      printf("%llu ", value);
+      printf("%lu ", value);
     }
     printf("\n");
   }

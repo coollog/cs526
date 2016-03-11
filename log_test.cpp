@@ -22,7 +22,7 @@ void init(const char *filename) {
 }
 
 void printEntry(const Log::Entry& entry) {
-  printf("entry: {%u, %llu, %llu}\n", entry.opCode, entry.id1, entry.id2);
+  printf("entry: {%u, %lu, %lu}\n", entry.opCode, entry.id1, entry.id2);
 }
 
 void printMetadata(const Log::Metadata& md) {
