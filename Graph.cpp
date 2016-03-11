@@ -152,8 +152,64 @@ int Graph::shortestPath(uint64_t idSource, uint64_t idDest) {
   return -1;
 }
 
-bool Graph::checkpoint() {
-  // TODO: Add implementation.
+const uint64_t *Graph::loadToArray(size_t& size) {
+  std::vector<uint64_t> data;
 
-  return true;
+  data.push_back(nodes.size());
+
+  for (const auto& node: nodes) {
+    uint64_t id = node.first;
+    IdSet values = node.second;
+
+    data.push_back(id);
+    data.push_back(values.size());
+    for (const auto& value: values) {
+      data.push_back(value);
+    }
+  }
+
+  size = data.size();
+
+  return &data[0];
+}
+
+void Graph::loadFromArray(const uint64_t *data, size_t size) {
+  if (size == 0) return;
+
+  unsigned int i = 0;
+  uint64_t nodeCount = data[i++];
+
+  for (unsigned int ni = 0; ni < nodeCount; ni ++) {
+    uint64_t id = data[i++];
+    uint64_t n = data[i++];
+
+    IdSet values;
+    for (unsigned int vi = 0; vi < n; vi ++) {
+      uint64_t value = data[i++];
+      values.insert(value);
+    }
+
+    nodes[id] = values;
+  }
+}
+
+void Graph::init() {
+  size_t size = Log::getCheckpointSize();
+  void *data = malloc(size);
+
+  if (!Log::readCheckpoint(data)) {
+    printf("Graph could not be loaded from checkpoint!\n");
+    return;
+  }
+
+  loadFromArray((uint64_t *)data, size);
+
+  free(data);
+}
+
+bool Graph::checkpoint() {
+  size_t size;
+  const uint64_t *data = loadToArray(size);
+
+  return Log::writeCheckpoint(data, size);
 }

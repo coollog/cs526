@@ -20,6 +20,10 @@ const unsigned int HTTP::JSON_MAX_LEN = 1000,
 
 Graph HTTP::graph;
 
+void HTTP::init() {
+  graph.init();
+}
+
 int HTTP::tokenToInt(struct json_token *token) {
   return atoi(std::string(token->ptr, token->len).c_str());
 }

@@ -5,6 +5,8 @@
 
 class HTTP {
 public:
+  static void init();
+
   static void request(struct mg_connection *nc, struct http_message *data);
 
 private:

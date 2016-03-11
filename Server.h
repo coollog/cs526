@@ -3,7 +3,7 @@
 
 class Server {
 public:
-  static void init(const char *port, const char *devFile);
+  static void init(const char *port);
   static void loop();
   static void close();
 

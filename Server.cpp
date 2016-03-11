@@ -2,7 +2,7 @@
 
 struct mg_mgr Server::mgr;
 
-void Server::init(const char *port, const char *devFile) {
+void Server::init(const char *port) {
   mg_mgr_init(&mgr, NULL);
 
   // Listen on port
@@ -10,6 +10,8 @@ void Server::init(const char *port, const char *devFile) {
 
   // Set to use HTTP protocol.
   mg_set_protocol_http_websocket(nc);
+
+  HTTP::init();
 }
 
 void Server::loop() {

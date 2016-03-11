@@ -46,6 +46,7 @@ public:
 
   // Opens the disk, reads the metadata, and sets of internal states of the log.
   static bool init(const char *devFile);
+  static uint32_t getCheckpointSize() { return metadata.checkpointSize; };
   // Read in the checkpoint to a buffer.
   static bool readCheckpoint(void *buf);
   // Write the graph to the checkpoint and reset the log.
