@@ -6,11 +6,6 @@ uint32_t Log::BlockBuffer::id;
 void *Log::BlockBuffer::block;
 
 // This is for OS X.
-#ifndef aligned_alloc
-  void *aligned_alloc(int align, size_t size) {
-    return malloc(size);
-  }
-#endif
 
 void Log::BlockBuffer::init() {
   block = aligned_alloc(0x1000, BLOCK_SIZE);
