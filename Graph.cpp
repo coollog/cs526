@@ -24,6 +24,8 @@ int Graph::addNode(uint64_t id) {
   // Add the node to graph.
   nodes[id] = IdSet();
 
+  printf("Graph: added node '%llu'\n", id);
+
   return 0;
 }
 
@@ -42,6 +44,8 @@ int Graph::addEdge(uint64_t id1, uint64_t id2) {
   neighborList(id1)->insert(id2);
   neighborList(id2)->insert(id1);
 
+  printf("Graph: added edge '%llu' to '%llu'\n", id1, id2);
+
   return 0;
 }
 
@@ -57,6 +61,8 @@ int Graph::removeNode(uint64_t id) {
 
   // Remove node.
   nodes.erase(id);
+
+  printf("Graph: removed node '%llu'\n", id);
 
   return 0;
 }
@@ -75,6 +81,8 @@ int Graph::removeEdge(uint64_t id1, uint64_t id2) {
   // Remove edge.
   neighbors1->erase(id2);
   neighbors2->erase(id1);
+
+  printf("Graph: removed edge '%llu' to '%llu'\n", id1, id2);
 
   return 0;
 }
@@ -168,7 +176,13 @@ const uint64_t *Graph::loadToArray(size_t& size) {
     }
   }
 
-  size = data.size();
+  size = data.size() * sizeof(uint64_t);
+
+  printf("Graph loaded to array as: ");
+  for (int i = 0; i < data.size(); i ++) {
+    printf("%d ", i);
+  }
+  printf("\n");
 
   return &data[0];
 }
@@ -195,21 +209,45 @@ void Graph::loadFromArray(const uint64_t *data, size_t size) {
 
 void Graph::init() {
   size_t size = Log::getCheckpointSize();
-  void *data = malloc(size);
 
-  if (!Log::readCheckpoint(data)) {
-    printf("Graph could not be loaded from checkpoint!\n");
-    return;
+  if (size > 0) {
+    void *data = malloc(size);
+
+    if (!Log::readCheckpoint(data)) {
+      printf("Graph could not be loaded from checkpoint!\n");
+      return;
+    }
+
+    loadFromArray((uint64_t *)data, size);
+    printf("Graph loaded from checkpoint:\n");
+    print();
+
+    free(data);
   }
-
-  loadFromArray((uint64_t *)data, size);
-
-  free(data);
 }
 
 bool Graph::checkpoint() {
   size_t size;
   const uint64_t *data = loadToArray(size);
 
-  return Log::writeCheckpoint(data, size);
+  if (Log::writeCheckpoint(data, size)) {
+    printf("Graph: wrote to checkpoint\n");
+    return true;
+  } else {
+    printf("Graph: checkpoint failed\n");
+    return false;
+  }
+}
+
+void Graph::print() {
+  for (const auto& node: nodes) {
+    uint64_t id = node.first;
+    IdSet values = node.second;
+
+    printf("%llu: ", id);
+    for (const auto& value: values) {
+      printf("%llu ", value);
+    }
+    printf("\n");
+  }
 }

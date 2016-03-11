@@ -41,6 +41,14 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
         //               "Connection: keep-alive\r\n"
         //               "Content-Length: 14\r\n"
         //               "\r\n{\"node_id\":71}\r\n");
+        mg_printf(nc, "POST /api/v1/checkpoint HTTP/1.1\r\n"
+                      "charset: utf-8\r\n"
+                      "Content-Type: application/json\r\n"
+                      "User-Agent: Java/1.7.0_71\r\n"
+                      "Host: localhost:1234\r\n"
+                      "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
+                      "Connection: keep-alive\r\n"
+                      "Content-Length: 0\r\n\r\n");
         // mg_printf(nc, "POST /api/v1/remove_edge HTTP/1.1\r\n"
         //               "charset: utf-8\r\n"
         //               "Content-Type: application/json\r\n"
@@ -50,15 +58,15 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
         //               "Connection: keep-alive\r\n"
         //               "Content-Length: 31\r\n"
         //               "\r\n{\"node_a_id\":81,\"node_b_id\":82}\r\n");
-        mg_printf(nc, "POST /api/v1/get_neighbors HTTP/1.1\r\n"
-                      "charset: utf-8\r\n"
-                      "Content-Type: application/json\r\n"
-                      "User-Agent: Java/1.7.0_71\r\n"
-                      "Host: localhost:1234\r\n"
-                      "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
-                      "Connection: keep-alive\r\n"
-                      "Content-Length: 14\r\n"
-                      "\r\n{\"node_id\":81}\")\r\n");
+        // mg_printf(nc, "POST /api/v1/get_neighbors HTTP/1.1\r\n"
+        //               "charset: utf-8\r\n"
+        //               "Content-Type: application/json\r\n"
+        //               "User-Agent: Java/1.7.0_71\r\n"
+        //               "Host: localhost:1234\r\n"
+        //               "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
+        //               "Connection: keep-alive\r\n"
+        //               "Content-Length: 14\r\n"
+        //               "\r\n{\"node_id\":81}\")\r\n");
 
       } else {
         printf("Error connecting to %s: %s\n",

@@ -48,7 +48,7 @@ private:
   static const char *requestShortestPath(struct json_token *json,
                                          char jsonBuf[],
                                          int *jsonLen);
-  static const char *requestCheckpoint(struct json_token *json);
+  static const char *requestCheckpoint();
 
   static Graph graph;
 };

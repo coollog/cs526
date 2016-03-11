@@ -31,12 +31,21 @@ void printMetadata(const Log::Metadata& md) {
 }
 
 void printCheckpoint() {
-  char data[0x1000];
+  size_t size = Log::getCheckpointSize();
+  char *data = (char *)malloc(size);
+
   if (!Log::readCheckpoint(data)) {
     printf("checkpoint read error: %d\n", Log::getErrno());
     exit(1);
   }
-  printf("checkpoint read as: '%s'\n", data);
+
+  printf("checkpoint read as: ");
+    for (const char* p = data; p < data + size; ++p) {
+      printf("%02x ", *p);
+    }
+  printf("\n");
+
+  free(data);
 }
 void checkpoint() {
   const char *data = "This is the checkpoint data.";

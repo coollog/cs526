@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <vector>
 #include <assert.h>
+#include <stdio.h>
 
 #include "Log.h"
 
@@ -23,6 +24,8 @@ public:
   IdSet *getNeighbors(uint64_t id);
   int shortestPath(uint64_t id1, uint64_t id2);
   bool checkpoint();
+
+  void print();
 
 private:
   bool idExists(uint64_t id);

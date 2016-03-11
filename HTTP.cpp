@@ -43,10 +43,13 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
   if (!checkMethodPOST(data)) return;
 
   // Parse the JSON.
-  struct json_token *json = parseJsonFromHTTPMessage(data);
-  if (json == NULL) {
-    printf("ERROR PARSING JSON\n");
-    return;
+  struct json_token *json;
+  if (data->body.len > 0) {
+    json = parseJsonFromHTTPMessage(data);
+    if (json == NULL) {
+      printf("ERROR PARSING JSON\n");
+      return;
+    }
   }
 
   // Process different functions.
@@ -94,7 +97,7 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
 
   } else if (!strncmp(F_CHECKPOINT, uri.p, uri.len)) {
     printf("Got CHECKPOINT: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestCheckpoint(json);
+    responseCode = requestCheckpoint();
 
   } else {
     printf("Got bad URI: %.*s\n", (int)uri.len, uri.p);
@@ -255,7 +258,7 @@ const char *HTTP::requestShortestPath(struct json_token *json,
   return RC_200_OK;
 }
 
-const char *HTTP::requestCheckpoint(struct json_token *json) {
+const char *HTTP::requestCheckpoint() {
   if (!graph.checkpoint()) {
     printf("CHECKPOINT INSUFFICIENT SPACE\n");
     return RC_507_INSUFFICIENT_SPACE;
