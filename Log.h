@@ -149,7 +149,7 @@ private:
 
   static off_t getCheckpointOffset() { return metadata.logSize * BLOCK_SIZE; }
 
-  static Metadata metadata;
+  static alignas(0x1000) Metadata metadata;
 
   // The current block.
   static uint32_t currentHead;
