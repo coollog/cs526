@@ -31,6 +31,7 @@ bool Log::playback(Entry *entry) {
 
   BlockHeader header;
   if (!readBlockHeader(currentHead, &header)) return false; // Error instead?
+  if (metadata.generation != header.generation) return false;
 
   if (!readBlockEntry(header, currentHead, currentEntry, entry)) {
     // If reached end of block, move to next block.
@@ -45,7 +46,7 @@ bool Log::playback(Entry *entry) {
 
   return moveToNextEntry();
 }
-bool Log::add(uint32_t opCode, uint64_t id1, uint64_t id2) {
+bool Log::add(OpCode opCode, uint64_t id1, uint64_t id2) {
   if (outOfSpace()) return false;
 
   // If our current generation is 0, we need to initialize it to 1.

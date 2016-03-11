@@ -22,6 +22,13 @@ class Log {
   static const uint32_t MAX_ENTRY_COUNT = 204;
 
 public:
+  enum OpCode: uint32_t {
+    ADD_NODE,
+    ADD_EDGE,
+    REMOVE_NODE,
+    REMOVE_EDGE
+  };
+
   // Holds the data in the superblock.
   typedef struct {
     uint32_t generation = 0;
@@ -59,7 +66,7 @@ public:
   // Make sure the checkpoint is loaded in first.
   static bool playback(Entry *entry);
   // Adds an entry to the log.
-  static bool add(uint32_t opCode, uint64_t id1, uint64_t id2);
+  static bool add(OpCode opCode, uint64_t id1, uint64_t id2);
   static bool outOfSpace() { return currentHead >= metadata.logSize; }
   // Unlinks the entire log/checkpoint.
   static bool erase();

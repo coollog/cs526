@@ -26,6 +26,10 @@ int Graph::addNode(uint64_t id) {
 
   printf("Graph: added node '%lu'\n", id);
 
+  // Log it.
+  if (!doNotLog)
+    if (!Log::add(Log::OpCode::ADD_NODE, id, 0)) return -2;
+
   return 0;
 }
 
@@ -46,6 +50,10 @@ int Graph::addEdge(uint64_t id1, uint64_t id2) {
 
   printf("Graph: added edge '%lu' to '%lu'\n", id1, id2);
 
+  // Log it.
+  if (!doNotLog)
+    if (!Log::add(Log::OpCode::ADD_EDGE, id1, id2)) return -3;
+
   return 0;
 }
 
@@ -63,6 +71,10 @@ int Graph::removeNode(uint64_t id) {
   nodes.erase(id);
 
   printf("Graph: removed node '%lu'\n", id);
+
+  // Log it.
+  if (!doNotLog)
+    if (!Log::add(Log::OpCode::REMOVE_NODE, id, 0)) return -3;
 
   return 0;
 }
@@ -83,6 +95,10 @@ int Graph::removeEdge(uint64_t id1, uint64_t id2) {
   neighbors2->erase(id1);
 
   printf("Graph: removed edge '%lu' to '%lu'\n", id1, id2);
+
+  // Log it.
+  if (!doNotLog)
+    if (!Log::add(Log::OpCode::REMOVE_EDGE, id1, id2)) return -3;
 
   return 0;
 }
@@ -208,6 +224,14 @@ void Graph::loadFromArray(const uint64_t *data, size_t size) {
 }
 
 void Graph::init() {
+  // Initialize from checkpoint.
+  loadCheckpoint();
+
+  // Playback from log.
+  playbackLog();
+}
+
+void Graph::loadCheckpoint() {
   size_t size = Log::getCheckpointSize();
 
   if (size > 0) {
@@ -224,6 +248,23 @@ void Graph::init() {
 
     free(data);
   }
+}
+
+void Graph::playbackLog() {
+  Log::Entry entry;
+
+  doNotLog = true;
+  while (Log::playback(&entry)) {
+    printf("playback entry: {%u, %lu, %lu}\n",
+           entry.opCode, entry.id1, entry.id2);
+    switch (entry.opCode) {
+    case Log::OpCode::ADD_NODE: addNode(entry.id1); break;
+    case Log::OpCode::ADD_EDGE: addEdge(entry.id1, entry.id2); break;
+    case Log::OpCode::REMOVE_NODE: removeNode(entry.id1); break;
+    case Log::OpCode::REMOVE_EDGE: removeEdge(entry.id1, entry.id2); break;
+    }
+  }
+  doNotLog = false;
 }
 
 bool Graph::checkpoint() {

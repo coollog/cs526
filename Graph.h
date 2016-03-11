@@ -39,5 +39,10 @@ private:
   const uint64_t *loadToArray(size_t& size);
   void loadFromArray(const uint64_t *data, size_t size);
 
+  // init() helpers
+  void loadCheckpoint();
+  void playbackLog();
+
+  bool doNotLog = false;
   NodeList nodes;
 };

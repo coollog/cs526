@@ -128,9 +128,13 @@ const char *HTTP::requestAddNode(struct json_token *json) {
   // Get the id.
   unsigned int id = tokenToInt(find_json_token(json, "node_id"));
 
-  if (graph.addNode(id) == -1) {
+  switch (graph.addNode(id)) {
+  case -1:
     printf("ADD NODE EXISTING NODE\n");
     return RC_204_OK;
+  case -2:
+    printf("ADD NODE LOGGING FAILED\n");
+    return RC_507_INSUFFICIENT_SPACE;
   }
 
   return RC_200_OK;
@@ -148,6 +152,9 @@ const char *HTTP::requestAddEdge(struct json_token *json) {
   case -2:
     printf("ADD EDGE BAD NODE\n");
     return RC_400_BAD_REQUEST;
+  case -3:
+    printf("ADD EDGE LOGGING FAILED\n");
+    return RC_507_INSUFFICIENT_SPACE;
   }
 
   return RC_200_OK;
@@ -157,9 +164,13 @@ const char *HTTP::requestRemoveNode(struct json_token *json) {
   // Get the id.
   unsigned int id = tokenToInt(find_json_token(json, "node_id"));
 
-  if (graph.removeNode(id) == -2) {
+  switch (graph.removeNode(id)) {
+  case -2:
     printf("REMOVE NODE NONEXISTENT NODE\n");
     return RC_400_BAD_REQUEST;
+  case -3:
+    printf("REMOVE NODE LOGGING FAILED\n");
+    return RC_507_INSUFFICIENT_SPACE;
   }
 
   return RC_200_OK;
@@ -170,9 +181,13 @@ const char *HTTP::requestRemoveEdge(struct json_token *json) {
   unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
   unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
 
-  if (graph.removeEdge(id_a, id_b) == -2) {
+  switch (graph.removeEdge(id_a, id_b)) {
+  case -2:
     printf("REMOVE EDGE NONEXISTENT EDGE\n");
     return RC_400_BAD_REQUEST;
+  case -3:
+    printf("REMOVE EDGE LOGGING FAILED\n");
+    return RC_507_INSUFFICIENT_SPACE;
   }
 
   return RC_200_OK;

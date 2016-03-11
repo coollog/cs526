@@ -40,7 +40,16 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
         //               "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
         //               "Connection: keep-alive\r\n"
         //               "Content-Length: 14\r\n"
-        //               "\r\n{\"node_id\":71}\r\n");
+        //               "\r\n{\"node_id\":33}\r\n");
+        // mg_printf(nc, "POST /api/v1/add_edge HTTP/1.1\r\n"
+        //               "charset: utf-8\r\n"
+        //               "Content-Type: application/json\r\n"
+        //               "User-Agent: Java/1.7.0_71\r\n"
+        //               "Host: localhost:1234\r\n"
+        //               "Accept: text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2\r\n"
+        //               "Connection: keep-alive\r\n"
+        //               "Content-Length: 32\r\n"
+        //               "\r\n{\"node_a_id\":33,\"node_b_id\":71}\r\n");
         mg_printf(nc, "POST /api/v1/checkpoint HTTP/1.1\r\n"
                       "charset: utf-8\r\n"
                       "Content-Type: application/json\r\n"
@@ -85,10 +94,9 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
 
 int main(void) {
   struct mg_mgr mgr;
-  struct mg_connection *nc;
 
   mg_mgr_init(&mgr, NULL);
-  nc = mg_connect(&mgr, s_target_address, ev_handler);
+  mg_connect(&mgr, s_target_address, ev_handler);
 
   printf("Starting client against %s\n", s_target_address);
   while (s_exit_flag == 0) {

@@ -67,7 +67,7 @@ void playback() {
   printf("finished playback\n");
 }
 
-void add(uint32_t opCode, uint64_t id1, uint64_t id2) {
+void add(Log::OpCode opCode, uint64_t id1, uint64_t id2) {
   if (!Log::add(opCode, id1, id2)) {
     printf("add error: %d\n", Log::getErrno());
     exit(1);
@@ -86,7 +86,8 @@ int main(int argc, char *argv[]) {
 
   if (argc > 2) {
     if (!strcmp(argv[2], "add")) {
-      add(1, 1234, 4321);
+      add(Log::OpCode::ADD_NODE, 33, 0);
+      add(Log::OpCode::ADD_NODE, 71, 0);
 
       playback();
     }
