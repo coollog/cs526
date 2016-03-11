@@ -10,7 +10,7 @@ using namespace std;
 
 #include "mongoose.h"
 
-static const char *s_target_address = "localhost:1234";
+static const char *s_target_address;
 
 static int s_exit_flag = 0;
 
@@ -92,7 +92,9 @@ static void ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
   }
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
+  s_target_address = argv[1];
+
   struct mg_mgr mgr;
 
   mg_mgr_init(&mgr, NULL);
