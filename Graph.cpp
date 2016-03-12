@@ -66,14 +66,11 @@ int Graph::removeNode(uint64_t id) {
   typedef std::pair<uint64_t, uint64_t> Edge;
   std::set<Edge> edges;
   for (uint64_t neighborId: *neighbors) {
-    printf("Removing edge %lu to %lu\n", id, neighborId);
     edges.insert(Edge(id, neighborId));
   }
   for (auto edge: edges) {
     removeEdge(edge.first, edge.second);
   }
-
-  printf("Erasing %lu from nodes\n");
 
   // Remove node.
   nodes.erase(id);
@@ -107,8 +104,6 @@ int Graph::removeEdge(uint64_t id1, uint64_t id2) {
   // Log it.
   if (!doNotLog)
     if (!Log::add(Log::OpCode::REMOVE_EDGE, id1, id2)) return -3;
-
-  printf("Added to log: '%lu' to '%lu'\n", id1, id2);
 
   return 0;
 }
