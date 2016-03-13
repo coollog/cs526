@@ -84,22 +84,24 @@ bool Log::Disk::diskWrite(off_t offset, const void *data, size_t size) {
   if (!diskOpen()) return false;
   if (!diskSeek(offset)) return false;
 
-  const void *dataAligned;
+  void *dataAligned;
+  const void *dataAlignedConst;
   size_t sizeAligned = roundToPageSize(size);
   if (reinterpret_cast<uintptr_t>(data) & 0xfff) {
     dataAligned = aligned_alloc(0x1000, sizeAligned);
+    dataAlignedConst = dataAligned;
   } else {
-    dataAligned = data;
+    dataAlignedConst = data;
   }
 
-  ssize_t writeSize = write(diskFd, dataAligned, sizeAligned);
+  ssize_t writeSize = write(diskFd, dataAlignedConst, sizeAligned);
   if (writeSize != (ssize_t)sizeAligned) {
     setErrno(errno);
-    if (data != dataAligned) free(dataAligned);
+    if (data != dataAlignedConst) free(dataAligned);
     return false;
   }
 
-  if (data != dataAligned) free(dataAligned);
+  if (data != dataAlignedConst) free(dataAligned);
 
   return true;
 }
