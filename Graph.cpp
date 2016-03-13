@@ -201,7 +201,7 @@ const uint64_t *Graph::loadToArray(size_t& size) {
 
   printf("Graph loaded to array as: ");
   for (unsigned int i = 0; i < data.size(); i ++) {
-    printf("%u ", data[i]);
+    printf("%lu ", data[i]);
   }
   printf("\n");
 
