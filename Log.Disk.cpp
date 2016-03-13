@@ -1,5 +1,12 @@
 #include "Log.h"
 
+// This is for OS X.
+#ifndef O_DIRECT
+  static void *aligned_alloc(int align, size_t size) {
+    return malloc(size);
+  }
+#endif
+
 bool Log::Disk::diskOpen() {
   if (isOpen()) return true;
 
@@ -50,10 +57,22 @@ bool Log::Disk::diskRead(off_t offset, void *buf, size_t size) {
   if (!diskOpen()) return false;
   if (!diskSeek(offset)) return false;
 
-  ssize_t readSize = read(diskFd, buf, size);
-  if (readSize != (ssize_t)size) {
+  void *bufAligned;
+  size_t sizeAligned = roundToPageSize(size);;
+  if (reinterpret_cast<uintptr_t>(buf) & 0xfff) {
+    bufAligned = aligned_alloc(0x1000, sizeAligned);
+  } else {
+    bufAligned = buf;
+  }
+
+  ssize_t readSize = read(diskFd, bufAligned, sizeAligned);
+  if (readSize != (ssize_t)sizeAligned) {
     setErrno(errno);
     return false;
+  }
+
+  if (buf != bufAligned) {
+    memcpy(buf, bufAligned, size);
   }
 
   return true;
@@ -63,8 +82,16 @@ bool Log::Disk::diskWrite(off_t offset, const void *data, size_t size) {
   if (!diskOpen()) return false;
   if (!diskSeek(offset)) return false;
 
-  ssize_t writeSize = write(diskFd , data, size);
-  if (writeSize != (ssize_t)size) {
+  const void *dataAligned;
+  size_t sizeAligned = roundToPageSize(size);;
+  if (reinterpret_cast<uintptr_t>(data) & 0xfff) {
+    dataAligned = aligned_alloc(0x1000, sizeAligned);
+  } else {
+    dataAligned = data;
+  }
+
+  ssize_t writeSize = write(diskFd, dataAligned, sizeAligned);
+  if (writeSize != (ssize_t)sizeAligned) {
     setErrno(errno);
     return false;
   }

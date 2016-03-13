@@ -100,6 +100,9 @@ private:
     static bool diskOpen(); // Open the disk.
 
     static bool diskSeek(off_t offset); // Seek to position offset.
+
+    static size_t roundToPageSize(const size_t& size)
+      { return (size + 0xfff) & ~0xfff; }
   };
 
   // Helpers for the block/entry methods.
