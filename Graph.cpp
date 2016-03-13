@@ -181,6 +181,17 @@ int Graph::shortestPath(uint64_t idSource, uint64_t idDest) {
   return -1;
 }
 
+// This is for OS X.
+#ifndef O_DIRECT
+  static void *aligned_alloc(int align, size_t size) {
+    return malloc(size);
+  }
+#endif
+
+static size_t roundToPageSize(const size_t& size) {
+  return (size + 0xfff) & ~0xfff;
+}
+
 const uint64_t *Graph::loadToArray(size_t& size) {
   std::vector<uint64_t> data;
 
@@ -205,8 +216,10 @@ const uint64_t *Graph::loadToArray(size_t& size) {
   }
   printf("\n");
 
-  uint64_t *dataAligned = (uint64_t *)aligned_alloc(0x1000, size);
+  uint64_t *dataAligned =
+    (uint64_t *)aligned_alloc(0x1000, roundToPageSize(size));
   memcpy(dataAligned, &data[0], size);
+  size = roundToPageSize(size);
 
   return dataAligned;
 }

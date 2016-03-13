@@ -32,7 +32,7 @@ public:
   // Holds the data in the superblock.
   typedef struct {
     uint32_t generation = 0;
-    uint32_t logSize = 100;
+    uint32_t logSize = 256 * 1024;
     uint32_t checkpointSize = 0;
   } __attribute__((packed)) Metadata;
 
