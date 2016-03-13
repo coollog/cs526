@@ -181,7 +181,7 @@ int Graph::shortestPath(uint64_t idSource, uint64_t idDest) {
   return -1;
 }
 
-const uint64_t *Graph::loadToArray(size_t& size) {
+uint64_t *Graph::loadToArray(size_t& size) {
   std::vector<uint64_t> data;
 
   data.push_back(nodes.size());
@@ -205,7 +205,10 @@ const uint64_t *Graph::loadToArray(size_t& size) {
   }
   printf("\n");
 
-  return &data[0];
+  void *dataAlloc = malloc(size);
+  memcpy(dataAlloc, &data[0], size);
+
+  return (uint64_t *)dataAlloc;
 }
 
 void Graph::loadFromArray(const uint64_t *data, size_t size) {
@@ -274,13 +277,15 @@ void Graph::playbackLog() {
 
 bool Graph::checkpoint() {
   size_t size;
-  const uint64_t *data = loadToArray(size);
+  uint64_t *data = loadToArray(size);
 
   if (Log::writeCheckpoint(data, size)) {
     printf("Graph: wrote to checkpoint\n");
+    free(data);
     return true;
   } else {
     printf("Graph: checkpoint failed\n");
+    free(data);
     return false;
   }
 }

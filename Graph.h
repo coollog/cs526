@@ -38,7 +38,7 @@ private:
   // The array starts with the number of nodes.
   // The nodes are converted into an array uint64_t, where each <key, value>
   // becomes [key, n, value1, value2, value3, ..., valuen].
-  const uint64_t *loadToArray(size_t& size);
+  uint64_t *loadToArray(size_t& size);
   void loadFromArray(const uint64_t *data, size_t size);
 
   // init() helpers
