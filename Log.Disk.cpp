@@ -58,7 +58,7 @@ bool Log::Disk::diskRead(off_t offset, void *buf, size_t size) {
   if (!diskSeek(offset)) return false;
 
   void *bufAligned;
-  size_t sizeAligned = roundToPageSize(size);;
+  size_t sizeAligned = roundToPageSize(size);
   if (reinterpret_cast<uintptr_t>(buf) & 0xfff) {
     bufAligned = aligned_alloc(0x1000, sizeAligned);
   } else {
@@ -68,11 +68,13 @@ bool Log::Disk::diskRead(off_t offset, void *buf, size_t size) {
   ssize_t readSize = read(diskFd, bufAligned, sizeAligned);
   if (readSize != (ssize_t)sizeAligned) {
     setErrno(errno);
+    if (buf != bufAligned) free(bufAligned);
     return false;
   }
 
   if (buf != bufAligned) {
     memcpy(buf, bufAligned, size);
+    free(bufAligned);
   }
 
   return true;
@@ -83,7 +85,7 @@ bool Log::Disk::diskWrite(off_t offset, const void *data, size_t size) {
   if (!diskSeek(offset)) return false;
 
   const void *dataAligned;
-  size_t sizeAligned = roundToPageSize(size);;
+  size_t sizeAligned = roundToPageSize(size);
   if (reinterpret_cast<uintptr_t>(data) & 0xfff) {
     dataAligned = aligned_alloc(0x1000, sizeAligned);
   } else {
@@ -93,7 +95,11 @@ bool Log::Disk::diskWrite(off_t offset, const void *data, size_t size) {
   ssize_t writeSize = write(diskFd, dataAligned, sizeAligned);
   if (writeSize != (ssize_t)sizeAligned) {
     setErrno(errno);
+    if (data != dataAligned) free(dataAligned);
     return false;
   }
+
+  if (data != dataAligned) free(dataAligned);
+
   return true;
 }
