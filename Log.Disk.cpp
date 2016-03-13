@@ -89,6 +89,7 @@ bool Log::Disk::diskWrite(off_t offset, const void *data, size_t size) {
   size_t sizeAligned = roundToPageSize(size);
   if (reinterpret_cast<uintptr_t>(data) & 0xfff) {
     dataAligned = aligned_alloc(0x1000, sizeAligned);
+    memcpy(dataAligned, data, size);
     dataAlignedConst = dataAligned;
   } else {
     dataAlignedConst = data;
