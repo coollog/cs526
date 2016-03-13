@@ -7,7 +7,7 @@ void *Log::BlockBuffer::block;
 
 // This is for OS X.
 #ifndef O_DIRECT
-  void *aligned_alloc(int align, size_t size) {
+  static void *aligned_alloc(int align, size_t size) {
     return malloc(size);
   }
 #endif

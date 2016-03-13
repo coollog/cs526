@@ -201,7 +201,7 @@ const uint64_t *Graph::loadToArray(size_t& size) {
 
   printf("Graph loaded to array as: ");
   for (unsigned int i = 0; i < data.size(); i ++) {
-    printf("%u ", i);
+    printf("%u ", data[i]);
   }
   printf("\n");
 
@@ -272,11 +272,21 @@ void Graph::playbackLog() {
   doNotLog = false;
 }
 
+// This is for OS X.
+#ifndef O_DIRECT
+  static void *aligned_alloc(int align, size_t size) {
+    return malloc(size);
+  }
+#endif
+
 bool Graph::checkpoint() {
   size_t size;
   const uint64_t *data = loadToArray(size);
 
-  if (Log::writeCheckpoint(data, size)) {
+  uint64_t *dataAligned = (uint64_t *)aligned_alloc(0x1000, size);
+  memcpy(dataAligned, data, size);
+
+  if (Log::writeCheckpoint(dataAligned, size)) {
     printf("Graph: wrote to checkpoint\n");
     return true;
   } else {
