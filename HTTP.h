@@ -32,8 +32,12 @@ private:
   static const char *requestAddEdge(struct json_token *json);
   static const char *requestRemoveNode(struct json_token *json);
   static const char *requestRemoveEdge(struct json_token *json);
-  static const char *requestGetNode(struct json_token *json);
-  static const char *requestGetEdge(struct json_token *json);
+  static const char *requestGetNode(struct json_token *json,
+                                    char jsonBuf[],
+                                    int *jsonLen);
+  static const char *requestGetEdge(struct json_token *json,
+                                    char jsonBuf[],
+                                    int *jsonLen);
   static const char *requestGetNeighbors(struct json_token *json,
                                          char jsonBuf[],
                                          int *jsonLen);
