@@ -5,7 +5,7 @@ struct mg_mgr Server::mgr;
 void Server::init(const char *port) {
   mg_mgr_init(&mgr, NULL);
 
-  // Listen on port
+  // Listen on port.
   struct mg_connection *nc = mg_bind(&mgr, port, &Server::handleEvent);
 
   // Set to use HTTP protocol.

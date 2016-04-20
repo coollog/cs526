@@ -7,7 +7,8 @@ const char *HTTP::F_ADD_NODE = "/api/v1/add_node",
            *HTTP::F_GET_NODE = "/api/v1/get_node",
            *HTTP::F_GET_EDGE = "/api/v1/get_edge",
            *HTTP::F_GET_NEIGHBORS = "/api/v1/get_neighbors",
-           *HTTP::F_SHORTEST_PATH = "/api/v1/shortest_path";
+           *HTTP::F_SHORTEST_PATH = "/api/v1/shortest_path",
+           *HTTP::F_RPC = "/rpc";
 
 const char *HTTP::RC_200_OK = "200 OK",
            *HTTP::RC_204_OK = "204 OK",
@@ -88,6 +89,12 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
     printf("Got SHORTEST_PATH: %.*s\n", (int)uri.len, uri.p);
     responseCode = requestShortestPath(json, jsonBuf, &responseLen);
     responseBody = jsonBuf;
+
+  } else if (!strncmp(F_RPC, uri.p, uri.len)) {
+    printf("Got RPC: %.*s\n", (int)uri.len, uri.p);
+    responseCode = requestRPC(responseBody, responseLen, jsonBuf);
+    responseBody = jsonBuf;
+    responseLen = (int)strlen(responseBody);
 
   } else {
     printf("Got bad URI: %.*s\n", (int)uri.len, uri.p);
@@ -249,4 +256,28 @@ const char *HTTP::requestShortestPath(struct json_token *json,
                        "{ s: i }", "distance", dist);
 
   return RC_200_OK;
+}
+
+const char *HTTP::requestRPC(const char *jsonBody,
+                             int jsonLen,
+                             char jsonBuf[]) {
+  static const char *methods[] = { "write", NULL };
+  static mg_rpc_handler_t handlers[] = { HTTP::rpc_write, NULL };
+  char buf[JSON_MAX_LEN];
+
+  mg_rpc_dispatch(jsonBody, jsonLen, buf, JSON_MAX_LEN, methods, handlers);
+  memcpy(jsonBuf, buf, JSON_MAX_LEN);
+
+  return RC_200_OK;
+}
+
+int HTTP::rpc_write(char *buf, int len, struct mg_rpc_request *req) {
+  unsigned int id1 = tokenToInt(find_json_token(req->params, "id1"));
+  unsigned int id2 = tokenToInt(find_json_token(req->params, "id2"));
+
+  printf("Got rpc_write: %u, %u\n", id1, id2);
+  // Write reply.
+  strcpy(buf, "hiiiiii");
+
+  return mg_rpc_create_reply(buf, len, req, "f", 0);
 }

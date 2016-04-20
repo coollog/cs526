@@ -7,6 +7,8 @@ class HTTP {
 public:
   static void request(struct mg_connection *nc, struct http_message *data);
 
+  static int rpc_write(char *buf, int len, struct mg_rpc_request *req);
+
 private:
   static const char *F_ADD_NODE,
                     *F_ADD_EDGE,
@@ -15,7 +17,8 @@ private:
                     *F_GET_NODE,
                     *F_GET_EDGE,
                     *F_GET_NEIGHBORS,
-                    *F_SHORTEST_PATH;
+                    *F_SHORTEST_PATH,
+                    *F_RPC;
 
   static const char *RC_200_OK,
                     *RC_204_OK,
@@ -44,6 +47,9 @@ private:
   static const char *requestShortestPath(struct json_token *json,
                                          char jsonBuf[],
                                          int *jsonLen);
+  static const char *requestRPC(const char *jsonBody,
+                                int jsonLen,
+                                char jsonBuf[]);
 
   static Graph graph;
 };
