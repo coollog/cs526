@@ -11,16 +11,16 @@ using namespace std;
 #include "Server.h"
 
 int main(int argc, char *argv[]) {
-  extern char *optarg;
-
   if (argc < 2) {
     printf("Usage: cs426_graph_server <port> [-b <next node>]\n");
     return 1;
   }
 
+  char hostStr[0x1000];
   char *nextNode = NULL;
-  if (argc >= 4 && !strcmp("-b", argv[2])) {
-    nextNode = argv[3];
+  if (argc >= 5 && !strcmp("-b", argv[2])) {
+    sprintf(hostStr, "%s:%s/rpc", argv[3], argv[4]);
+    nextNode = hostStr;
   }
 
   Server::init(argv[1], nextNode);

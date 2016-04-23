@@ -24,7 +24,7 @@ function ChainRepl() {
       var nextNode = '';
       if (i < chain.length - 1) {
         var nextPort = chain[i + 1];
-        nextNode = ' -b localhost:' + nextPort + '/rpc';
+        nextNode = ' -b localhost ' + nextPort;
       }
 
       var cmd = './cs426_graph_server ' + port + nextNode;
