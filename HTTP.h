@@ -2,12 +2,15 @@
 
 #include "mongoose.h"
 #include "Graph.h"
+#include "RPC.h"
 
 class HTTP {
 public:
   static void request(struct mg_connection *nc, struct http_message *data);
 
   static int rpc_write(char *buf, int len, struct mg_rpc_request *req);
+
+  static void printGraph();
 
 private:
   static const char *F_ADD_NODE,
@@ -26,6 +29,7 @@ private:
 
   static const unsigned int JSON_MAX_LEN, REPLY_MAX_LEN;
 
+  static void tokenToStr(struct json_token *token, char *dest);
   static int tokenToInt(struct json_token *token);
 
   static bool checkMethodPOST(struct http_message *data);

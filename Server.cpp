@@ -2,7 +2,9 @@
 
 struct mg_mgr Server::mgr;
 
-void Server::init(const char *port) {
+void Server::init(const char *port, const char *nextNode) {
+  RPC::init(nextNode);
+
   mg_mgr_init(&mgr, NULL);
 
   // Listen on port.

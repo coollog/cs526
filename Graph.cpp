@@ -50,8 +50,12 @@ int Graph::removeNode(unsigned int id) {
   if (!idExists(id)) return -2;
 
   // Remove all edges.
-  IdSet *neighbors = neighborList(id);
-  for (unsigned int neighborId: *neighbors) {
+  IdSet neighbors;
+  IdSet *neighborSet = neighborList(id);
+  for (unsigned int neighborId: *neighborSet) {
+    neighbors.insert(neighborId);
+  }
+  for (unsigned int neighborId: neighbors) {
     removeEdge(id, neighborId);
   }
 
@@ -150,4 +154,18 @@ int Graph::shortestPath(unsigned int idSource, unsigned int idDest) {
   }
 
   return -1;
+}
+
+void Graph::print() {
+  printf("Current graph state:\n");
+  for (const auto& node: nodes) {
+    unsigned int id = node.first;
+    IdSet neighbors = node.second;
+
+    printf("%u: ", id);
+    for (unsigned int neighbor: neighbors) {
+      printf("%u ", neighbor);
+    }
+    printf("\n");
+  }
 }

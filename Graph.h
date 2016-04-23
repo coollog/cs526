@@ -17,6 +17,8 @@ public:
   IdSet *getNeighbors(unsigned int id);
   int shortestPath(unsigned int id1, unsigned int id2);
 
+  void print();
+
 private:
   bool idExists(unsigned int id);
   bool idInSet(IdSet *idSet, unsigned int id);
