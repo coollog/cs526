@@ -1,24 +1,25 @@
 #include "RPC.h"
 
-const char *RPC::nextHost;
-
-void RPC::init(const char *nextNode) {
-  nextHost = nextNode;
+static int tokenToInt(struct json_token *token) {
+  return atoi(std::string(token->ptr, token->len).c_str());
 }
 
-bool RPC::sendWrite(const char *type, unsigned int id1, unsigned int id2) {
-  // If is last node in chain, return.
-  if (nextHost == NULL) return true;
-
-  std::string response = executeCurl(type, id1, id2);
+int RPC::sendWrite(const char *partitionHost,
+                    const char *type,
+                    unsigned int id1,
+                    unsigned int id2) {
+  std::string response = executeCurl(partitionHost, type, id1, id2);
   const char *responseStr = response.c_str();
   printf("Got response:\n%s\n", responseStr);
 
   struct json_token *json = parse_json2(responseStr, strlen(responseStr));
-  return json != NULL;
+
+  int result = tokenToInt(find_json_token(json, "result"));
+  return result;
 }
 
-std::string RPC::executeCurl(const char *type,
+std::string RPC::executeCurl(const char *partitionHost,
+                             const char *type,
                              unsigned int id1,
                              unsigned int id2) {
   // Make the command.
@@ -26,7 +27,7 @@ std::string RPC::executeCurl(const char *type,
   sprintf(
     cmd,
     "curl -d '{id:1,method:\"write\",params:{type:\"%s\",id1:%u,id2:%u}}' %s",
-    type, id1, id2, nextHost
+    type, id1, id2, partitionHost
   );
 
   printf("executing command: %s\n", cmd);

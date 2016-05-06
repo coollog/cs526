@@ -11,19 +11,22 @@ using namespace std;
 #include "Server.h"
 
 int main(int argc, char *argv[]) {
-  if (argc < 2) {
-    printf("Usage: cs426_graph_server <port> [-b <next node>]\n");
+  if (argc < 8 || strcmp("-p", argv[2]) || strcmp("-l", argv[4])) {
+    printf("Usage: cs426_graph_server <port> -p <partnum> -l <partlist>\n");
     return 1;
   }
 
-  char hostStr[0x1000];
-  char *nextNode = NULL;
-  if (argc >= 5 && !strcmp("-b", argv[2])) {
-    sprintf(hostStr, "%s:%s/rpc", argv[3], argv[4]);
-    nextNode = hostStr;
-  }
+  const char *port = argv[1];
+  int partitionIndex = atoi(argv[3]) - 1;
 
-  Server::init(argv[1], nextNode);
+  char hostStr[3][0x1000];
+  sprintf(hostStr[0], "%s/rpc", argv[5]);
+  sprintf(hostStr[1], "%s/rpc", argv[6]);
+  sprintf(hostStr[2], "%s/rpc", argv[7]);
+
+  const char *partitionList[3] = { hostStr[0], hostStr[1], hostStr[2] };
+
+  Server::init(port, partitionIndex, partitionList);
 
   // RPC::sendWrite("asdf", 1, 2);
 

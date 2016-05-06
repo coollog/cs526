@@ -1,13 +1,18 @@
 #include "HTTP.h"
 
+static void tokenToStr(struct json_token *token, char *dest) {
+  strcpy(dest, std::string(token->ptr, token->len).c_str());
+}
+static int tokenToInt(struct json_token *token) {
+  return atoi(std::string(token->ptr, token->len).c_str());
+}
+
 const char *HTTP::F_ADD_NODE = "/api/v1/add_node",
            *HTTP::F_ADD_EDGE = "/api/v1/add_edge",
-           *HTTP::F_REMOVE_NODE = "/api/v1/remove_node",
            *HTTP::F_REMOVE_EDGE = "/api/v1/remove_edge",
            *HTTP::F_GET_NODE = "/api/v1/get_node",
            *HTTP::F_GET_EDGE = "/api/v1/get_edge",
            *HTTP::F_GET_NEIGHBORS = "/api/v1/get_neighbors",
-           *HTTP::F_SHORTEST_PATH = "/api/v1/shortest_path",
            *HTTP::F_RPC = "/rpc";
 
 const char *HTTP::RC_200_OK = "200 OK",
@@ -17,14 +22,14 @@ const char *HTTP::RC_200_OK = "200 OK",
 const unsigned int HTTP::JSON_MAX_LEN = 1000,
                    HTTP::REPLY_MAX_LEN = 1000;
 
+int HTTP::partitionIndex;
+const char **HTTP::partitionList;
+
 Graph HTTP::graph;
 
-void HTTP::tokenToStr(struct json_token *token, char *dest) {
-  strcpy(dest, std::string(token->ptr, token->len).c_str());
-}
-
-int HTTP::tokenToInt(struct json_token *token) {
-  return atoi(std::string(token->ptr, token->len).c_str());
+void HTTP::init(int partitionIndex, const char *partitionList[3]) {
+  HTTP::partitionIndex = partitionIndex;
+  HTTP::partitionList = partitionList;
 }
 
 bool HTTP::checkMethodPOST(struct http_message *data) {
@@ -68,10 +73,6 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
     printf("Got ADD_EDGE: %.*s\n", (int)uri.len, uri.p);
     responseCode = requestAddEdge(json);
 
-  } else if (!strncmp(F_REMOVE_NODE, uri.p, uri.len)) {
-    printf("Got REMOVE_NODE: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestRemoveNode(json);
-
   } else if (!strncmp(F_REMOVE_EDGE, uri.p, uri.len)) {
     printf("Got REMOVE_EDGE: %.*s\n", (int)uri.len, uri.p);
     responseCode = requestRemoveEdge(json);
@@ -89,11 +90,6 @@ void HTTP::request(struct mg_connection *nc, struct http_message *data) {
   } else if (!strncmp(F_GET_NEIGHBORS, uri.p, uri.len)) {
     printf("Got GET_NEIGHBORS: %.*s\n", (int)uri.len, uri.p);
     responseCode = requestGetNeighbors(json, jsonBuf, &responseLen);
-    responseBody = jsonBuf;
-
-  } else if (!strncmp(F_SHORTEST_PATH, uri.p, uri.len)) {
-    printf("Got SHORTEST_PATH: %.*s\n", (int)uri.len, uri.p);
-    responseCode = requestShortestPath(json, jsonBuf, &responseLen);
     responseBody = jsonBuf;
 
   } else if (!strncmp(F_RPC, uri.p, uri.len)) {
@@ -134,14 +130,20 @@ const char *HTTP::requestAddNode(struct json_token *json) {
   // Get the id.
   unsigned int id = tokenToInt(find_json_token(json, "node_id"));
 
-  switch (graph.addNode(id)) {
+  switch (callPartition(F_ADD_NODE, id, 0)) {
   case -1:
     printf("ADD NODE EXISTING NODE\n");
     return RC_204_OK;
+  case 0:
+    return RC_200_OK;
+  default:
+    if (graph.addNode(id) == -1) {
+      printf("ADD NODE EXISTING NODE\n");
+      return RC_204_OK;
+    }
   }
 
   printGraph();
-  RPC::sendWrite(F_ADD_NODE, id, 0);
 
   return RC_200_OK;
 }
@@ -161,23 +163,6 @@ const char *HTTP::requestAddEdge(struct json_token *json) {
   }
 
   printGraph();
-  RPC::sendWrite(F_ADD_EDGE, id_a, id_b);
-
-  return RC_200_OK;
-}
-
-const char *HTTP::requestRemoveNode(struct json_token *json) {
-  // Get the id.
-  unsigned int id = tokenToInt(find_json_token(json, "node_id"));
-
-  switch (graph.removeNode(id)) {
-  case -2:
-    printf("REMOVE NODE NONEXISTENT NODE\n");
-    return RC_400_BAD_REQUEST;
-  }
-
-  printGraph();
-  RPC::sendWrite(F_REMOVE_NODE, id, 0);
 
   return RC_200_OK;
 }
@@ -194,7 +179,6 @@ const char *HTTP::requestRemoveEdge(struct json_token *json) {
   }
 
   printGraph();
-  RPC::sendWrite(F_REMOVE_EDGE, id_a, id_b);
 
   return RC_200_OK;
 }
@@ -205,7 +189,13 @@ const char *HTTP::requestGetNode(struct json_token *json,
   // Get the id.
   unsigned int id = tokenToInt(find_json_token(json, "node_id"));
 
-  bool inGraph = graph.getNode(id);
+  int inGraph;
+
+  switch (callPartition(F_GET_NODE, id, 0)) {
+  case 0: inGraph = 0; break;
+  case 1: inGraph = 1; break;
+  default: inGraph = graph.getNode(id);
+  }
 
   *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
                        "{ s: i }", "in_graph", inGraph);
@@ -256,29 +246,6 @@ const char *HTTP::requestGetNeighbors(struct json_token *json,
   return RC_200_OK;
 }
 
-const char *HTTP::requestShortestPath(struct json_token *json,
-                                      char jsonBuf[],
-                                      int *jsonLen) {
-  // Get the ids.
-  unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
-  unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
-
-  int dist = graph.shortestPath(id_a, id_b);
-  switch (dist) {
-  case -1:
-    printf("SHORTEST PATH NO PATH\n");
-    return RC_204_OK;
-  case -2:
-    printf("SHORTEST PATH NONEXISTENT NODE\n");
-    return RC_400_BAD_REQUEST;
-  }
-
-  *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
-                       "{ s: i }", "distance", dist);
-
-  return RC_200_OK;
-}
-
 const char *HTTP::requestRPC(const char *jsonBody,
                              int jsonLen,
                              char jsonBuf[]) {
@@ -292,6 +259,13 @@ const char *HTTP::requestRPC(const char *jsonBody,
   return RC_200_OK;
 }
 
+int HTTP::callPartition(const char *type, unsigned int id1, unsigned int id2) {
+  int targetPartition = id1 % 3;
+  if (targetPartition == partitionIndex) return 1337;
+
+  return RPC::sendWrite(partitionList[targetPartition], type, id1, id2);
+}
+
 int HTTP::rpc_write(char *buf, int len, struct mg_rpc_request *req) {
   char type[0x1000];
   tokenToStr(find_json_token(req->params, "type"), type);
@@ -301,29 +275,27 @@ int HTTP::rpc_write(char *buf, int len, struct mg_rpc_request *req) {
   printf("Got rpc_write: %s, %u, %u\n", type, id1, id2);
 
   // Perform RPC.
-  if (!strcmp(F_ADD_NODE, type)) {
-    graph.addNode(id1);
+  int returnCode = 0;
 
-    RPC::sendWrite(F_ADD_NODE, id1, id2);
+  if (!strcmp(F_ADD_NODE, type)) {
+    returnCode = graph.addNode(id1);
 
   } else if (!strcmp(F_ADD_EDGE, type)) {
-    graph.addEdge(id1, id2);
-
-    RPC::sendWrite(F_ADD_EDGE, id1, id2);
-
-  } else if (!strcmp(F_REMOVE_NODE, type)) {
-    graph.removeNode(id1);
-
-    RPC::sendWrite(F_REMOVE_NODE, id1, id2);
+    returnCode = graph.addEdge(id1, id2);
 
   } else if (!strcmp(F_REMOVE_EDGE, type)) {
-    graph.removeEdge(id1, id2);
+    returnCode = graph.removeEdge(id1, id2);
 
-    RPC::sendWrite(F_REMOVE_EDGE, id1, id2);
+  } else if (!strcmp(F_GET_NODE, type)) {
+    returnCode = graph.getNode(id1);
+
+  } else  if (!strcmp(F_GET_EDGE, type)) {
+    returnCode = graph.getEdge(id1, id2);
   }
+
   printGraph();
 
-  return mg_rpc_create_reply(buf, len, req, "i", 0);
+  return mg_rpc_create_reply(buf, len, req, "i", returnCode);
 }
 
 void HTTP::printGraph() {

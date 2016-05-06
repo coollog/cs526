@@ -3,7 +3,9 @@
 
 class Server {
 public:
-  static void init(const char *port, const char *nextNode);
+  static void init(const char *port,
+                   int partitionIndex,
+                   const char *partitionList[3]);
   static void loop();
   static void close();
 

@@ -2,8 +2,10 @@
 
 struct mg_mgr Server::mgr;
 
-void Server::init(const char *port, const char *nextNode) {
-  RPC::init(nextNode);
+void Server::init(const char *port,
+                  int partitionIndex,
+                  const char *partitionList[3]) {
+  HTTP::init(partitionIndex, partitionList);
 
   mg_mgr_init(&mgr, NULL);
 
