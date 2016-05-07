@@ -7,10 +7,10 @@
 
 class RPC {
 public:
-  static int sendWrite(const char *partitionHost,
-                        const char *type,
-                        unsigned int id1,
-                        unsigned int id2);
+  static struct json_token *sendWrite(const char *partitionHost,
+                                      const char *type,
+                                      unsigned int id1,
+                                      unsigned int id2);
 
 private:
   static std::string executeCurl(const char *partitionHost,

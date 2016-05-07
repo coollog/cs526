@@ -283,20 +283,35 @@ const char *HTTP::requestGetNeighbors(struct json_token *json,
   // Get the id.
   unsigned int id = tokenToInt(find_json_token(json, "node_id"));
 
-  Graph::IdSet *neighbors = graph.getNeighbors(id);
-  if (neighbors == NULL) {
+  if (isIdMine(id)) {
+    Graph::IdSet *neighbors = graph.getNeighbors(id);
+    if (neighbors == NULL) {
+      printf("GET NEIGHBORS NONEXISTENT NODE\n");
+      return RC_400_BAD_REQUEST;
+    }
+
+    *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
+                         "{ s: i, s: [", "node_id", id, "neighbors");
+    for (unsigned int id: *neighbors) {
+      *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen,
+                            "i, ", id);
+    }
+    if (neighbors->size() > 0) *jsonLen -= 2;
+    *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen, "] }");
+
+    return RC_200_OK;
+  }
+
+  struct json_token *neighbors =
+    RPC::sendWrite(partitionList[id % 3], F_GET_NEIGHBORS, id, 0);
+
+  if (find_json_token(neighbors, "neighbors") == NULL) {
     printf("GET NEIGHBORS NONEXISTENT NODE\n");
     return RC_400_BAD_REQUEST;
   }
 
   *jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
-                       "{ s: i, s: [", "node_id", id, "neighbors");
-  for (unsigned int id: *neighbors) {
-    *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen,
-                          "i, ", id);
-  }
-  if (neighbors->size() > 0) *jsonLen -= 2;
-  *jsonLen += json_emit(jsonBuf + *jsonLen, JSON_MAX_LEN - *jsonLen, "] }");
+                       "V", neighbors->ptr, neighbors->len);
 
   return RC_200_OK;
 }
@@ -323,7 +338,8 @@ int HTTP::callPartition(const char *type, unsigned int id1, unsigned int id2) {
   if (isIdMine(id1)) return 1337;
 
   int targetPartition = id1 % 3;
-  return RPC::sendWrite(partitionList[targetPartition], type, id1, id2);
+  return
+    tokenToInt(RPC::sendWrite(partitionList[targetPartition], type, id1, id2));
 }
 
 int HTTP::rpc_write(char *buf, int len, struct mg_rpc_request *req) {
@@ -351,6 +367,28 @@ int HTTP::rpc_write(char *buf, int len, struct mg_rpc_request *req) {
 
   } else if (!strcmp(F_GET_EDGE, type)) {
     returnCode = graph.getEdge(id1, id2);
+
+  } else if (!strcmp(F_GET_NEIGHBORS, type)) {
+    Graph::IdSet *neighbors = graph.getNeighbors(id1);
+
+    if (neighbors == NULL) {
+      printf("GET NEIGHBORS NONEXISTENT NODE\n");
+      returnCode = -2;
+    } else {
+      char jsonBuf[JSON_MAX_LEN];
+      int jsonLen;
+
+      jsonLen = json_emit(jsonBuf, JSON_MAX_LEN,
+                          "{ s: i, s: [", "node_id", id1, "neighbors");
+      for (unsigned int id: *neighbors) {
+        jsonLen += json_emit(jsonBuf + jsonLen, JSON_MAX_LEN - jsonLen,
+                             "i, ", id);
+      }
+      if (neighbors->size() > 0) jsonLen -= 2;
+      jsonLen += json_emit(jsonBuf + jsonLen, JSON_MAX_LEN - jsonLen, "] }");
+
+      return mg_rpc_create_reply(buf, len, req, "V", jsonBuf, jsonLen);
+    }
   }
 
   printGraph();

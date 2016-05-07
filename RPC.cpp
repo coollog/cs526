@@ -1,21 +1,16 @@
 #include "RPC.h"
 
-static int tokenToInt(struct json_token *token) {
-  return atoi(std::string(token->ptr, token->len).c_str());
-}
-
-int RPC::sendWrite(const char *partitionHost,
-                    const char *type,
-                    unsigned int id1,
-                    unsigned int id2) {
+struct json_token *RPC::sendWrite(const char *partitionHost,
+                                  const char *type,
+                                  unsigned int id1,
+                                  unsigned int id2) {
   std::string response = executeCurl(partitionHost, type, id1, id2);
   const char *responseStr = response.c_str();
   printf("Got response:\n%s\n", responseStr);
 
   struct json_token *json = parse_json2(responseStr, strlen(responseStr));
 
-  int result = tokenToInt(find_json_token(json, "result"));
-  return result;
+  return find_json_token(json, "result");
 }
 
 std::string RPC::executeCurl(const char *partitionHost,
