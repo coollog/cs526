@@ -48,6 +48,8 @@ private:
                                 int jsonLen,
                                 char jsonBuf[]);
 
+  static bool isIdMine(unsigned int id);
+
   static int callPartition(const char *type,
                            unsigned int id1,
                            unsigned int id2);

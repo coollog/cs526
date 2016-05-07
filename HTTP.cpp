@@ -153,16 +153,47 @@ const char *HTTP::requestAddEdge(struct json_token *json) {
   unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
   unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
 
-  switch (graph.addEdge(id_a, id_b)) {
-  case -1:
-    printf("ADD EDGE INVALID\n");
-    return RC_204_OK;
-  case -2:
-    printf("ADD EDGE BAD NODE\n");
-    return RC_400_BAD_REQUEST;
+  if (isIdMine(id_a)) {
+    switch (graph.addEdge(id_a, id_b)) {
+    case -1:
+      printf("ADD EDGE INVALID\n");
+      return RC_204_OK;
+    case -2:
+      printf("ADD EDGE BAD NODE\n");
+      return RC_400_BAD_REQUEST;
+    }
+    printGraph();
+  } else {
+    switch (callPartition(F_ADD_EDGE, id_a, id_b)) {
+    case -1:
+      printf("ADD EDGE INVALID\n");
+      return RC_204_OK;
+    case -2:
+      printf("ADD EDGE BAD NODE\n");
+      return RC_400_BAD_REQUEST;
+    }
   }
 
-  printGraph();
+  if (isIdMine(id_b)) {
+    switch (graph.addEdge(id_b, id_a)) {
+    case -1:
+      printf("ADD EDGE INVALID\n");
+      return RC_204_OK;
+    case -2:
+      printf("ADD EDGE BAD NODE\n");
+      return RC_400_BAD_REQUEST;
+    }
+    printGraph();
+  } else {
+    switch (callPartition(F_ADD_EDGE, id_b, id_a)) {
+    case -1:
+      printf("ADD EDGE INVALID\n");
+      return RC_204_OK;
+    case -2:
+      printf("ADD EDGE BAD NODE\n");
+      return RC_400_BAD_REQUEST;
+    }
+  }
 
   return RC_200_OK;
 }
@@ -172,13 +203,37 @@ const char *HTTP::requestRemoveEdge(struct json_token *json) {
   unsigned int id_a = tokenToInt(find_json_token(json, "node_a_id"));
   unsigned int id_b = tokenToInt(find_json_token(json, "node_b_id"));
 
-  switch (graph.removeEdge(id_a, id_b)) {
-  case -2:
-    printf("REMOVE EDGE NONEXISTENT EDGE\n");
-    return RC_400_BAD_REQUEST;
+  if (isIdMine(id_a)) {
+    switch (graph.removeEdge(id_a, id_b)) {
+    case -2:
+      printf("REMOVE EDGE NONEXISTENT EDGE\n");
+      return RC_400_BAD_REQUEST;
+    }
+
+    printGraph();
+  } else {
+    switch (callPartition(F_REMOVE_EDGE, id_a, id_b)) {
+    case -2:
+      printf("REMOVE EDGE NONEXISTENT EDGE\n");
+      return RC_400_BAD_REQUEST;
+    }
   }
 
-  printGraph();
+  if (isIdMine(id_b)) {
+    switch (graph.removeEdge(id_b, id_a)) {
+    case -2:
+      printf("REMOVE EDGE NONEXISTENT EDGE\n");
+      return RC_400_BAD_REQUEST;
+    }
+
+    printGraph();
+  } else {
+    switch (callPartition(F_REMOVE_EDGE, id_b, id_a)) {
+    case -2:
+      printf("REMOVE EDGE NONEXISTENT EDGE\n");
+      return RC_400_BAD_REQUEST;
+    }
+  }
 
   return RC_200_OK;
 }
@@ -259,10 +314,15 @@ const char *HTTP::requestRPC(const char *jsonBody,
   return RC_200_OK;
 }
 
-int HTTP::callPartition(const char *type, unsigned int id1, unsigned int id2) {
-  int targetPartition = id1 % 3;
-  if (targetPartition == partitionIndex) return 1337;
+bool HTTP::isIdMine(unsigned int id) {
+  int targetPartition = id % 3;
+  return targetPartition == partitionIndex;
+}
 
+int HTTP::callPartition(const char *type, unsigned int id1, unsigned int id2) {
+  if (isIdMine(id1)) return 1337;
+
+  int targetPartition = id1 % 3;
   return RPC::sendWrite(partitionList[targetPartition], type, id1, id2);
 }
 
@@ -289,7 +349,7 @@ int HTTP::rpc_write(char *buf, int len, struct mg_rpc_request *req) {
   } else if (!strcmp(F_GET_NODE, type)) {
     returnCode = graph.getNode(id1);
 
-  } else  if (!strcmp(F_GET_EDGE, type)) {
+  } else if (!strcmp(F_GET_EDGE, type)) {
     returnCode = graph.getEdge(id1, id2);
   }
 
